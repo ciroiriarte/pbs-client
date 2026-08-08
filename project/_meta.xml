@@ -14,10 +14,10 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
+  <!-- openSUSE:Slowroll publishes x86_64 only. -->
   <repository name="openSUSE_Slowroll">
     <path project="openSUSE:Slowroll" repository="standard"/>
     <arch>x86_64</arch>
-    <arch>aarch64</arch>
   </repository>
 
   <!-- Leap uses its own (versioned) rust; devel:languages:rust does not build
@@ -38,15 +38,19 @@ https://github.com/ciroiriarte/pbs-client</description>
   <!-- OBS hosts RockyLinux:9 / RockyLinux:10 (not "Rocky:9"). CRB carries the
        -devel build deps (fuse3-devel, systemd-devel, etc.). EL rust-toolset
        must be >= 1.81; verify on first build, add EPEL if short. -->
+  <!-- Base system comes from baseos+appstream; -devel build deps from CRB.
+       ("standard" alone does not provide rpm/the build root.) -->
   <repository name="RockyLinux_9">
-    <path project="RockyLinux:9" repository="standard"/>
+    <path project="RockyLinux:9" repository="baseos"/>
+    <path project="RockyLinux:9" repository="appstream"/>
     <path project="RockyLinux:9" repository="CRB"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
   </repository>
 
   <repository name="RockyLinux_10">
-    <path project="RockyLinux:10" repository="standard"/>
+    <path project="RockyLinux:10" repository="baseos"/>
+    <path project="RockyLinux:10" repository="appstream"/>
     <path project="RockyLinux:10" repository="CRB"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
