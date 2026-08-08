@@ -1,2 +1,2 @@
-target/release/proxmox-file-restore usr/bin
-zsh-completions/_proxmox-file-restore usr/share/zsh/vendor-completions
+proxmox-backup/target/release/proxmox-file-restore usr/bin
+proxmox-backup/zsh-completions/_proxmox-file-restore usr/share/zsh/vendor-completions

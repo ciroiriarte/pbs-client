@@ -6,6 +6,13 @@
 # Server Solutions GmbH; this repository is community-maintained and not
 # endorsed by Proxmox.
 #
+# Source0 is a self-contained bundle produced by tools/build_source.py:
+#   proxmox-backup-client-<ver>/
+#     proxmox-backup/   (patched; .cargo/config.toml -> ../vendor)
+#     proxmox/ pathpatterns/ pxar/ proxmox-fuse/   (path-patched crates)
+#     vendor/           (third-party crates)
+# It builds fully offline; no source services or network at build time.
+#
 
 Name:           proxmox-backup-client
 Version:        4.2.0
@@ -13,14 +20,13 @@ Release:        0
 Summary:        Proxmox Backup client (proxmox-backup-client, pxar)
 License:        AGPL-3.0-or-later
 URL:            https://pbs.proxmox.com
-Source0:        proxmox-backup-%{version}.tar.zst
-Source1:        vendor.tar.zst
-Source2:        cargo_config
+Source0:        proxmox-backup-client-%{version}.tar.zst
 
 BuildRequires:  zstd
 BuildRequires:  cargo
 BuildRequires:  rust >= 1.81
 BuildRequires:  clang
+BuildRequires:  llvm-devel
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(fuse3)
 BuildRequires:  pkgconfig(openssl)
@@ -28,12 +34,6 @@ BuildRequires:  pkgconfig(libzstd)
 BuildRequires:  pkgconfig(libacl)
 BuildRequires:  pkgconfig(libsystemd)
 BuildRequires:  pkgconfig(uuid)
-%if 0%{?rhel}
-BuildRequires:  llvm-devel
-%else
-BuildRequires:  llvm-devel
-BuildRequires:  libopenssl-devel
-%endif
 Requires:       fuse3
 
 %description
@@ -54,35 +54,33 @@ snapshots (host and container backups). The VM/block-image restore path
 (proxmox-restore-daemon + a prebuilt restore image) is NOT included.
 
 %prep
-%autosetup -n proxmox-backup-%{version}
-# Vendored crates + offline cargo config produced by obs-service-cargo.
-tar -xf %{SOURCE1}
-install -D -m 0644 %{SOURCE2} .cargo/config.toml
+%autosetup -n proxmox-backup-client-%{version}
 
 %build
-export CARGO_HOME="%{_builddir}/proxmox-backup-%{version}/.cargo"
+export CARGO_HOME=%{_builddir}/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG=1
 export OPENSSL_NO_VENDOR=1
-# PXAR/FUSE bindgen needs libclang at runtime of the build.
+cd proxmox-backup
+# Offline build against the bundled vendor/ (see proxmox-backup/.cargo/config.toml).
 cargo build --release --offline \
   -p proxmox-backup-client --bin proxmox-backup-client \
   -p pxar-bin              --bin pxar \
   -p proxmox-file-restore  --bin proxmox-file-restore
 
 %install
+cd proxmox-backup
 install -D -m 0755 target/release/proxmox-backup-client %{buildroot}%{_bindir}/proxmox-backup-client
 install -D -m 0755 target/release/pxar                  %{buildroot}%{_bindir}/pxar
 install -D -m 0755 target/release/proxmox-file-restore  %{buildroot}%{_bindir}/proxmox-file-restore
-
-# Upstream ships static zsh completions (man pages require the heavy sphinx docs
-# build, which we intentionally skip for a lean offline client build).
+# Upstream ships static zsh completions (man pages need the heavy sphinx docs
+# build, intentionally skipped for a lean offline client build).
 install -D -m 0644 zsh-completions/_proxmox-backup-client %{buildroot}%{_datadir}/zsh/site-functions/_proxmox-backup-client
 install -D -m 0644 zsh-completions/_pxar                  %{buildroot}%{_datadir}/zsh/site-functions/_pxar
 install -D -m 0644 zsh-completions/_proxmox-file-restore  %{buildroot}%{_datadir}/zsh/site-functions/_proxmox-file-restore
 
 %files
-%license debian/copyright
-%doc README.rst
+%license proxmox-backup/debian/copyright
+%doc proxmox-backup/README.rst
 %{_bindir}/proxmox-backup-client
 %{_bindir}/pxar
 %{_datadir}/zsh/site-functions/_proxmox-backup-client

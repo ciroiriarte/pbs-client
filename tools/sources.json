@@ -1,0 +1,19 @@
+{
+  "_comment": "Coordinated source commits per proxmox-backup release. The client cannot build from crates.io alone: the workspace pins Proxmox crate versions that are unpublished (pathpatterns 1.x, pxar 1.0.1, proxmox-schema 5, ...). We assemble proxmox-backup + 4 sibling repos (which are UNTAGGED) at coordinated commits and enable the [patch.crates-io] path overrides. Sibling commits are chosen by date-match to the release tag and verified to satisfy the required crate versions. See tools/build_source.py.",
+  "upstream": {
+    "proxmox-backup": "https://git.proxmox.com/git/proxmox-backup.git",
+    "proxmox": "https://git.proxmox.com/git/proxmox.git",
+    "pathpatterns": "https://git.proxmox.com/git/pathpatterns.git",
+    "pxar": "https://git.proxmox.com/git/pxar.git",
+    "proxmox-fuse": "https://git.proxmox.com/git/proxmox-fuse.git"
+  },
+  "releases": {
+    "4.2.0": {
+      "proxmox-backup": "v4.2.0",
+      "proxmox": "5392ce2e00f175780e1f2cc553f62bf2a9170a86",
+      "pathpatterns": "5323cbe49ae5d592eb8a3fa2e215550e83dd7fba",
+      "pxar": "091a8a382d0d6fc71025351fb35c51b1f3b0074d",
+      "proxmox-fuse": "ac99ac97f7c2eb7ab9ee6ec3b41034e68b1eca7d"
+    }
+  }
+}

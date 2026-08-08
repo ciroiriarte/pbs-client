@@ -78,19 +78,32 @@ sudo apt-get update
 sudo apt-get install -y proxmox-backup-client proxmox-file-restore
 ```
 
+## How the build works (important)
+
+The client **cannot** be vendored from crates.io. The `proxmox-backup` workspace
+pins Proxmox's *own* crates at versions that aren't published (e.g. `pathpatterns 1`,
+`pxar 1.0.1`, `proxmox-schema 5`), and upstream ships no `Cargo.lock`. So we
+**assemble five repos** (`proxmox-backup` + `proxmox` + `pathpatterns` + `pxar` +
+`proxmox-fuse`) at coordinated commits, enable the `[patch.crates-io]` path
+overrides upstream ships commented-out, and vendor only the third-party crates.
+`tools/build_source.py` produces a self-contained bundle that builds fully offline
+— there is **no OBS source service** (OBS can't do multi-repo assembly).
+
 ## Repository layout
 
 ```
 proxmox-backup-client/        # the osc package (one source → RPM + DEB)
-  _service                    # obs_scm fetch (git.proxmox.com tag) + cargo_vendor
-  proxmox-backup-client.spec  # RPM recipe (openSUSE + Rocky)
+  proxmox-backup-client.spec  # RPM recipe (openSUSE + Rocky); Source0 = the bundle
   proxmox-backup-client.changes
   debian.control|rules|compat|changelog|*.install   # Ubuntu recipe
   _constraints                # extra disk/mem for the vendored build
 project/
   _meta.xml                   # distro/arch matrix   (osc meta prj -F)
   _config                     # prjconf (rust preference, deb support)
-tools/bump.py                 # upstream version tracker (systemd timer / CI)
+tools/
+  sources.json                # pinned sibling commits per release
+  build_source.py             # assemble the offline bundle (clone+patch+vendor+tar)
+  bump.py                     # upstream version tracker (systemd timer / CI)
 tests/run-matrix.sh, lib.sh   # VM provisioning + backup/restore verification
 ```
 
@@ -101,24 +114,33 @@ tests/run-matrix.sh, lib.sh   # VM provisioning + backup/restore verification
 osc meta prj     home:ciriarte:pbs-client -F project/_meta.xml
 osc meta prjconf home:ciriarte:pbs-client -F project/_config
 
-# Package: check out, vendor, commit
+# Build the source bundle for the current version (clone + patch + vendor + tar)
+tools/build_source.py --version 4.2.0        # -> dist/proxmox-backup-client-4.2.0.tar.zst
+
+# Package: check out, add the bundle + recipe, commit
 osc co home:ciriarte:pbs-client proxmox-backup-client
-cp -a proxmox-backup-client/* <checkout>/    # or work in the checkout directly
 cd <checkout>
-osc service manualrun        # runs obs_scm + cargo_vendor -> vendor.tar.zst
+cp ../../dist/proxmox-backup-client-4.2.0.tar.zst .
+cp -a <repo>/proxmox-backup-client/* .
 osc addremove && osc commit -m "Initial import (v4.2.0)"
 
-# Later: automatic bumps
-tools/bump.py --commit       # detects a newer upstream tag, re-vendors, commits
+# Later: automatic bumps (assembles a fresh bundle, updates changelogs, commits)
+tools/bump.py --checkout <checkout> --commit
 ```
 
 ## Notes / known risks
 
-- **No upstream `Cargo.lock`.** `obs-service-cargo` resolves and vendors deps
-  itself (`update=true`); the committed `vendor.tar.zst` is the pin. Each bump
-  re-resolves — test before publishing.
-- **MSRV = rust 1.81** (edition 2021). Leap pulls a current toolchain from
-  `devel:languages:rust`; EL9 relies on `rust-toolset` ≥ 1.81 (add EPEL9 if a
-  future MSRV bump outruns it — `bump.py` warns).
+- **Sibling repos are untagged.** `proxmox` / `pathpatterns` / `pxar` /
+  `proxmox-fuse` carry no release tags, so `tools/build_source.py` pins commits by
+  **date-match** to the release tag and verifies the crate majors satisfy the
+  workspace requirements before building. `sources.json` records the exact pins.
+  (Upstream proposal: ask Proxmox to publish per-release sibling commit hashes so
+  this is deterministic instead of heuristic.)
+- **MSRV = rust 1.81** (edition 2021). Verified: v4.2.0 compiles clean on rustc
+  1.95 (no borrow-checker breakage). Leap/EL rust must be ≥ 1.81 — add
+  `devel:languages:rust` / EPEL9 to the relevant repo path if a distro's toolchain
+  is short.
+- **Bundle size.** The assembled tarball carries five repos + ~456 vendored crates;
+  it is large but self-contained and builds with no network.
 - `Rocky:10` / `Ubuntu:26.04` availability on build.opensuse.org should be
   confirmed; stage them last if not yet published.

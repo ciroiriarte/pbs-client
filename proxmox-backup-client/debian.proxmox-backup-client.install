@@ -1,4 +1,4 @@
-target/release/proxmox-backup-client usr/bin
-target/release/pxar usr/bin
-zsh-completions/_proxmox-backup-client usr/share/zsh/vendor-completions
-zsh-completions/_pxar usr/share/zsh/vendor-completions
+proxmox-backup/target/release/proxmox-backup-client usr/bin
+proxmox-backup/target/release/pxar usr/bin
+proxmox-backup/zsh-completions/_proxmox-backup-client usr/share/zsh/vendor-completions
+proxmox-backup/zsh-completions/_pxar usr/share/zsh/vendor-completions

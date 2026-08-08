@@ -1,9 +1,9 @@
 #!/usr/bin/make -f
 # Community/unofficial Proxmox Backup client build for Debian/Ubuntu targets on OBS.
-# Consumes the same obs-service-cargo output (vendor.tar.zst + cargo_config) as the
-# RPM recipe and builds offline against the vendored crates.
+# Source0 is the self-contained bundle (see the .spec header): the proxmox-backup
+# workspace plus its path-patched sibling crates and a vendor/ dir. Builds offline.
 
-export CARGO_HOME = $(CURDIR)/.cargo
+export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 export OPENSSL_NO_VENDOR = 1
 
@@ -11,11 +11,10 @@ export OPENSSL_NO_VENDOR = 1
 	dh $@
 
 override_dh_auto_configure:
-	tar -xf $(CURDIR)/vendor.tar.zst
-	install -D -m 0644 $(CURDIR)/cargo_config $(CARGO_HOME)/config.toml
+	# Nothing to configure; the bundled .cargo/config.toml points cargo at vendor/.
 
 override_dh_auto_build:
-	cargo build --release --offline \
+	cd proxmox-backup && cargo build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \
 	  -p pxar-bin              --bin pxar \
 	  -p proxmox-file-restore  --bin proxmox-file-restore
@@ -24,7 +23,7 @@ override_dh_auto_test:
 	# Skip upstream test suite for a client-only vendored build.
 
 override_dh_auto_install:
-	# Handled via debian.*.install files.
+	# Handled via debian.*.install files (paths under proxmox-backup/).
 
 override_dh_auto_clean:
-	rm -rf $(CURDIR)/target $(CARGO_HOME) $(CURDIR)/vendor
+	rm -rf proxmox-backup/target cargo-home
