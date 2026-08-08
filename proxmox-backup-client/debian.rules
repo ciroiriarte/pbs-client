@@ -17,8 +17,11 @@ override_dh_auto_configure:
 	# dpkg-source strips cargo-vendor's *.orig files (they collide with dpkg's
 	# .orig/patch convention), which breaks cargo's per-file checksum check.
 	# Blank the vendored checksums (as dh-cargo does): directory sources don't
-	# need per-file checksums. No python in the Debian build root, so use find.
-	find vendor -name .cargo-checksum.json -exec sh -c 'echo "{\"files\":{}}" > "$$1"' _ {} \;
+	# need per-file checksums. Write valid JSON once (single quotes avoid escaping
+	# hell through make/find/sh), then copy it over each checksum file.
+	echo '{"files":{}}' > cargo-checksum.stub
+	find vendor -name .cargo-checksum.json -exec cp cargo-checksum.stub {} \;
+	rm -f cargo-checksum.stub
 
 override_dh_auto_build:
 	cd proxmox-backup && cargo build --release --offline \
