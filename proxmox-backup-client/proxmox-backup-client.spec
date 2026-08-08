@@ -60,6 +60,9 @@ snapshots (host and container backups). The VM/block-image restore path
 export CARGO_HOME=%{_builddir}/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG=1
 export OPENSSL_NO_VENDOR=1
+# pbs-buildcfg/build.rs embeds REPOID; without it, it shells out to `git` (absent
+# in the build root, and the bundle carries no .git). Provide the version instead.
+export REPOID=%{version}
 cd proxmox-backup
 # Offline build against the bundled vendor/ (see proxmox-backup/.cargo/config.toml).
 cargo build --release --offline \

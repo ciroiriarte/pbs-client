@@ -6,6 +6,9 @@
 export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 export OPENSSL_NO_VENDOR = 1
+# pbs-buildcfg/build.rs embeds REPOID; without it it shells out to `git` (absent
+# in the build root, and the bundle carries no .git). Provide the version instead.
+export REPOID = $(shell dpkg-parsechangelog -SVersion 2>/dev/null | cut -d- -f1)
 
 %:
 	dh $@
