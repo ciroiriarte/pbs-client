@@ -1,4 +1,4 @@
-Format: 3.0 (quilt)
+Format: 1.0
 Source: proxmox-backup-client
 Version: 4.2.0-0
 Binary: proxmox-backup-client, proxmox-file-restore
