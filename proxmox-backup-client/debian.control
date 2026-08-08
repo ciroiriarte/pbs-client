@@ -1,0 +1,36 @@
+Source: proxmox-backup-client
+Section: admin
+Priority: optional
+Maintainer: Ciro Iriarte <ciro.iriarte+software@gmail.com>
+Build-Depends: debhelper (>= 13~),
+ cargo,
+ rustc (>= 1.81),
+ clang,
+ libclang-dev,
+ pkg-config,
+ libfuse3-dev,
+ libssl-dev,
+ libzstd-dev,
+ libacl1-dev,
+ libsystemd-dev,
+ uuid-dev,
+ zstd
+Standards-Version: 4.6.2
+Homepage: https://pbs.proxmox.com
+
+Package: proxmox-backup-client
+Architecture: amd64 arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, fuse3
+Description: Proxmox Backup client (proxmox-backup-client, pxar)
+ Command-line client for Proxmox Backup Server: create and restore
+ deduplicated, encrypted backups with proxmox-backup-client, plus the
+ pxar archive tool.
+ .
+ Community/unofficial build from upstream Rust sources.
+
+Package: proxmox-file-restore
+Architecture: amd64 arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}, fuse3, proxmox-backup-client (= ${binary:Version})
+Description: Single-file restore for Proxmox Backup
+ File-level restore from Proxmox Backup Server snapshots (host and
+ container backups). The VM/block-image restore path is not included.

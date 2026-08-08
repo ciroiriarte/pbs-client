@@ -1,0 +1,16 @@
+# Project build config for home:ciriarte:pbs-client
+# Apply with:  osc meta prjconf home:ciriarte:pbs-client -F project/_config
+
+# On Leap, two rust stacks can be visible (base + devel:languages:rust).
+# Prefer the packaged cargo/rust so the newer toolchain wins.
+Prefer: cargo rust rust-std
+
+# On EL, rust ships via rust-toolset; prefer it when present.
+%if "%_repository" =~ "RockyLinux"
+Prefer: rust-toolset cargo
+%endif
+
+# Debian/Ubuntu source packages are assembled from the flat debian.* files.
+%if "%_repository" =~ "Ubuntu"
+Support: debhelper dpkg-dev
+%endif

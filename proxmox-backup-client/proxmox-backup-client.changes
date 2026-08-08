@@ -1,0 +1,8 @@
+-------------------------------------------------------------------
+Fri Aug 08 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Initial community/unofficial packaging of the Proxmox Backup client
+  suite (proxmox-backup-client, pxar, proxmox-file-restore) built from
+  upstream Rust sources at tag v4.2.0.
+- File-level restore only; the VM/block-image restore path
+  (proxmox-restore-daemon + prebuilt restore image) is out of scope.

@@ -1,0 +1,8 @@
+proxmox-backup-client (4.2.0-0) unstable; urgency=medium
+
+  * Initial community/unofficial packaging of the Proxmox Backup client suite
+    (proxmox-backup-client, pxar, proxmox-file-restore) built from upstream
+    Rust sources at tag v4.2.0.
+  * File-level restore only; VM/block-image restore path is out of scope.
+
+ -- Ciro Iriarte <ciro.iriarte+software@gmail.com>  Fri, 08 Aug 2026 00:00:00 +0000

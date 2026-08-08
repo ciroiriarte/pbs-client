@@ -1,0 +1,12 @@
+<constraints>
+  <!-- The vendored Rust workspace build is large; give workers headroom to
+       avoid OOM / out-of-disk failures, especially on aarch64. -->
+  <hardware>
+    <disk>
+      <size unit="G">14</size>
+    </disk>
+    <physicalmemory>
+      <size unit="G">4</size>
+    </physicalmemory>
+  </hardware>
+</constraints>
