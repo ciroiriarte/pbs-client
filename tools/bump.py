@@ -100,7 +100,7 @@ def main() -> int:
     print(f"assembling bundle for {new} ...")
     run([sys.executable, str(HERE / "build_source.py"), "--version", new, "--auto",
          "--out", str(dist)])
-    tarball = dist / f"proxmox-backup-client-{new}.tar.zst"
+    tarball = dist / f"proxmox-backup-client-{new}.tar.xz"
     if not tarball.exists():
         print("error: bundle not produced", file=sys.stderr)
         return 1
@@ -114,7 +114,7 @@ def main() -> int:
         return 0
 
     co = Path(args.checkout)
-    old = list(co.glob("proxmox-backup-client-*.tar.zst"))
+    old = list(co.glob("proxmox-backup-client-*.tar.xz"))
     for f in old:
         run(["osc", "rm", "--force", f.name], cwd=co)
     run(["cp", str(tarball), str(co)])

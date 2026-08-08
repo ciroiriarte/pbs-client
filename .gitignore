@@ -3,7 +3,7 @@
 
 # Assembled source bundles (produced by tools/build_source.py; large, regenerated)
 dist/
-proxmox-backup-client-*.tar.zst
+proxmox-backup-client-*.tar.*
 cargo-home/
 
 # misc

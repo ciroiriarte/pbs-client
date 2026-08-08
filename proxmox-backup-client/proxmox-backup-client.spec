@@ -20,7 +20,7 @@ Release:        0
 Summary:        Proxmox Backup client (proxmox-backup-client, pxar)
 License:        AGPL-3.0-or-later
 URL:            https://pbs.proxmox.com
-Source0:        proxmox-backup-client-%{version}.tar.zst
+Source0:        proxmox-backup-client-%{version}.tar.xz
 
 BuildRequires:  zstd
 BuildRequires:  cargo

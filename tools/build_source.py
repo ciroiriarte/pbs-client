@@ -190,12 +190,14 @@ def main() -> int:
         count = len(list((bundle / "vendor").iterdir()))
         print(f"Vendored {count} crates.")
 
-        # Pack the bundle.
+        # Pack the bundle. Use xz, not zst: OBS's Debian debtransform only
+        # unpacks .tar.gz/.bz2/.xz orig tarballs, and rpm handles .xz fine too,
+        # so one .tar.xz Source0 serves both RPM and DEB targets.
         dist = Path(args.out)
         dist.mkdir(parents=True, exist_ok=True)
-        tarball = dist / f"proxmox-backup-client-{args.version}.tar.zst"
+        tarball = dist / f"proxmox-backup-client-{args.version}.tar.xz"
         print(f"Packing {tarball} ...")
-        run(["tar", "--zstd", "-cf", str(tarball), "-C", str(work), bundle.name])
+        run(["tar", "-cJf", str(tarball), "-C", str(work), bundle.name])
         size = tarball.stat().st_size // (1024 * 1024)
         print(f"Done: {tarball} ({size} MiB)")
 
