@@ -15,10 +15,10 @@ export REPOID = $(shell dpkg-parsechangelog -SVersion 2>/dev/null | cut -d- -f1)
 
 override_dh_auto_configure:
 	# dpkg-source strips cargo-vendor's *.orig files (they collide with dpkg's
-	# .orig/patch convention). Drop entries for now-absent files from each
-	# vendored .cargo-checksum.json so the offline build doesn't fail verifying
-	# them (Cargo.toml.orig is not used for compilation).
-	python3 -c "import json,glob,os;[open(f,'w').write(json.dumps({**d,'files':{k:v for k,v in d['files'].items() if os.path.exists(os.path.join(os.path.dirname(f),k))}})) for f in glob.glob('vendor/*/.cargo-checksum.json') for d in [json.load(open(f))]]"
+	# .orig/patch convention), which breaks cargo's per-file checksum check.
+	# Blank the vendored checksums (as dh-cargo does): directory sources don't
+	# need per-file checksums. No python in the Debian build root, so use find.
+	find vendor -name .cargo-checksum.json -exec sh -c 'echo "{\"files\":{}}" > "$$1"' _ {} \;
 
 override_dh_auto_build:
 	cd proxmox-backup && cargo build --release --offline \
