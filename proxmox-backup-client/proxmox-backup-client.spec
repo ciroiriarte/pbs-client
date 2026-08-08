@@ -86,11 +86,16 @@ install -D -m 0644 zsh-completions/_proxmox-file-restore  %{buildroot}%{_datadir
 %doc proxmox-backup/README.rst
 %{_bindir}/proxmox-backup-client
 %{_bindir}/pxar
+# Co-own the zsh dirs (openSUSE QA rejects unowned dirs; co-ownership is fine).
+%dir %{_datadir}/zsh
+%dir %{_datadir}/zsh/site-functions
 %{_datadir}/zsh/site-functions/_proxmox-backup-client
 %{_datadir}/zsh/site-functions/_pxar
 
 %files -n proxmox-file-restore
 %{_bindir}/proxmox-file-restore
+%dir %{_datadir}/zsh
+%dir %{_datadir}/zsh/site-functions
 %{_datadir}/zsh/site-functions/_proxmox-file-restore
 
 %changelog
