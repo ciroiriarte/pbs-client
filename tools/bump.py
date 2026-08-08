@@ -76,6 +76,13 @@ def rewrite_recipe(new: str) -> None:
         f"proxmox-backup-client ({new}-0) unstable; urgency=medium\n\n"
         f"  * {entry}\n\n -- {MAINTAINER}  {now:%a, %d %b %Y %H:%M:%S +0000}\n\n" + deb.read_text())
 
+    # Keep the debtransform .dsc in lockstep (Version + orig tarball name).
+    dsc = PKGDIR / "proxmox-backup-client.dsc"
+    t = re.sub(r"^(Version:\s*)\S+", rf"\g<1>{new}-0", dsc.read_text(), flags=re.M)
+    t = re.sub(r"(DEBTRANSFORM-TAR:\s*proxmox-backup-client-)\S+",
+               rf"\g<1>{new}.tar.xz", t)
+    dsc.write_text(t)
+
 
 def main() -> int:
     ap = argparse.ArgumentParser()
