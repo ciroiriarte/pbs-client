@@ -28,13 +28,14 @@ override_dh_auto_configure:
 	# verifies that against Cargo.lock). Use xargs, not -exec: the sed replacement
 	# contains {}, which collides with find's {} placeholder.
 	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
-	# Install the bundled Rust toolchain for this build arch.
-	tar -xf rust-$(RUST_VERSION)-$(RUST_TRIPLE).tar.xz
-	rust-$(RUST_VERSION)-$(RUST_TRIPLE)/install.sh --prefix=$(RUSTTC) \
-	  --disable-ldconfig --components=rustc,cargo,rust-std-$(RUST_TRIPLE)
 
 override_dh_auto_build:
-	cd proxmox-backup && PATH=$(RUSTTC)/bin:$$PATH \
+	# Install the bundled Rust toolchain for this arch (tarballs live in
+	# proxmox-backup/, which dpkg-source keeps) and build with it.
+	cd proxmox-backup && tar -xf rust-$(RUST_VERSION)-$(RUST_TRIPLE).tar.xz && \
+	  rust-$(RUST_VERSION)-$(RUST_TRIPLE)/install.sh --prefix=$(RUSTTC) \
+	    --disable-ldconfig --components=rustc,cargo,rust-std-$(RUST_TRIPLE) && \
+	  PATH=$(RUSTTC)/bin:$$PATH \
 	  LD_LIBRARY_PATH=$(RUSTTC)/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH} \
 	  cargo build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \

@@ -32,6 +32,7 @@ BuildRequires:  gcc
 BuildRequires:  gcc-c++
 BuildRequires:  clang
 BuildRequires:  llvm-devel
+BuildRequires:  pkgconf
 BuildRequires:  pkgconfig
 BuildRequires:  pkgconfig(fuse3)
 BuildRequires:  pkgconfig(openssl)
@@ -69,21 +70,21 @@ export OPENSSL_NO_VENDOR=1
 # in the build root, and the bundle carries no .git). Provide the version instead.
 export REPOID=%{version}
 
-# Install the bundled offline Rust toolchain for this build arch (the tarballs
-# live at the bundle top level) and use it instead of any distro rust.
 case "$(uname -m)" in
   x86_64)  triple=x86_64-unknown-linux-gnu ;;
   aarch64) triple=aarch64-unknown-linux-gnu ;;
   *) echo "unsupported arch $(uname -m)"; exit 1 ;;
 esac
+
+cd proxmox-backup
+# Install the bundled offline Rust toolchain for this build arch (the tarballs
+# live in proxmox-backup/) and use it instead of any distro rust.
 tar -xf rust-%{rust_version}-$triple.tar.xz
 rust-%{rust_version}-$triple/install.sh --prefix=%{_builddir}/rusttc \
   --disable-ldconfig --components=rustc,cargo,rust-std-$triple >/dev/null
 export PATH=%{_builddir}/rusttc/bin:$PATH
 export LD_LIBRARY_PATH=%{_builddir}/rusttc/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 rustc --version
-
-cd proxmox-backup
 # Offline build against the bundled vendor/ (see proxmox-backup/.cargo/config.toml).
 cargo build --release --offline \
   -p proxmox-backup-client --bin proxmox-backup-client \
