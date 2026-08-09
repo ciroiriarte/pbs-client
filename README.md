@@ -24,12 +24,24 @@ prebuilt kernel/initramfs restore image) and the Windows client.
 
 ## Supported targets
 
-openSUSE **Leap 16.0 / 15.6**, **Tumbleweed**, **Slowroll**; **Rocky Linux 9 / 10**;
-**Ubuntu 24.04 / 26.04** — on **x86_64** and **aarch64**.
+Built from source on OBS. Status reflects the toolchains/base repos actually
+available on build.opensuse.org.
+
+| Distro | x86_64 | aarch64 | Notes |
+|--------|:------:|:-------:|-------|
+| openSUSE Tumbleweed | ✅ | ✅ | |
+| openSUSE Slowroll | ✅ | — | no aarch64 base on OBS |
+| openSUSE Leap 16.0 | ✅ | ✅ | |
+| openSUSE Leap 15.6 | ⛔ | ⛔ | base rust 1.77 < MSRV 1.81 |
+| Rocky Linux 10 | ✅ | — | no aarch64 base on OBS |
+| Rocky Linux 9 | ⛔ | ⛔ | libfuse3 3.10 too old (proxmox-fuse needs ≥3.16) |
+| Ubuntu 26.04 | ✅ | ✅ | |
+| Ubuntu 24.04 | ⛔ | ⛔ | OBS mirror only ships rustc 1.74 < MSRV 1.81 |
 
 > Note: Proxmox's official Debian `bookworm` client repo already works on Ubuntu
-> x86_64. This repo exists to add **aarch64** and a single unified repo across all
-> the distros above.
+> x86_64. This repo adds **aarch64**, non-Debian distros, and a single unified repo.
+> The blocked rows are toolchain/base-repo limits on OBS, not packaging bugs — see
+> "Notes / known risks".
 
 ## Install
 
