@@ -24,10 +24,7 @@ override_dh_auto_configure:
 	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
 
 override_dh_auto_build:
-	# --ignore-rust-version: the resolved graph declares MSRV 1.87 (proxmox-fixed-
-	# string), but Debian Trixie ships ~1.85. Attempt to compile anyway; fails only
-	# if the code truly uses newer language features. No-op where rustc >= 1.87.
-	cd proxmox-backup && cargo build --release --offline --ignore-rust-version \
+	cd proxmox-backup && cargo build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \
 	  -p pxar-bin              --bin pxar \
 	  -p proxmox-file-restore  --bin proxmox-file-restore
