@@ -15,13 +15,11 @@ export REPOID = $(shell dpkg-parsechangelog -SVersion 2>/dev/null | cut -d- -f1)
 
 override_dh_auto_configure:
 	# dpkg-source strips cargo-vendor's *.orig files (they collide with dpkg's
-	# .orig/patch convention), which breaks cargo's per-file checksum check.
-	# Blank the vendored checksums (as dh-cargo does): directory sources don't
-	# need per-file checksums. Write valid JSON once (single quotes avoid escaping
-	# hell through make/find/sh), then copy it over each checksum file.
-	echo '{"files":{}}' > cargo-checksum.stub
-	find vendor -name .cargo-checksum.json -exec cp cargo-checksum.stub {} \;
-	rm -f cargo-checksum.stub
+	# .orig/patch convention), breaking cargo's per-file checksum verification.
+	# Empty the per-file checksums but KEEP each crate's "package" sha (cargo
+	# verifies that against Cargo.lock). The files object has no nested braces,
+	# so a simple sed suffices — no python needed in the Debian build root.
+	find vendor -name .cargo-checksum.json -exec sed -i 's/"files":{[^}]*}/"files":{}/' {} +
 
 override_dh_auto_build:
 	cd proxmox-backup && cargo build --release --offline \
