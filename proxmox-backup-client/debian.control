@@ -13,6 +13,7 @@ Build-Depends: debhelper (>= 13~),
  libzstd-dev,
  libacl1-dev,
  libsystemd-dev,
+ libcrypt-dev,
  uuid-dev,
  zstd
 Standards-Version: 4.6.2
