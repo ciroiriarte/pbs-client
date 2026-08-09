@@ -3,11 +3,11 @@ Section: admin
 Priority: optional
 Maintainer: Ciro Iriarte <ciro.iriarte+software@gmail.com>
 Build-Depends: debhelper (>= 13~),
- cargo (>= 1.87) | cargo-1.91 | cargo-1.89,
- rustc (>= 1.87) | rustc-1.91 | rustc-1.89,
+ gcc,
  clang,
  libclang-dev,
  pkg-config,
+ xz-utils,
  libfuse3-dev,
  libssl-dev,
  libzstd-dev,

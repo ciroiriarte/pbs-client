@@ -5,5 +5,5 @@ Binary: proxmox-backup-client, proxmox-backup-file-restore
 Maintainer: Ciro Iriarte <ciro.iriarte+software@gmail.com>
 Homepage: https://pbs.proxmox.com
 Architecture: any
-Build-Depends: debhelper (>= 13~), cargo (>= 1.87) | cargo-1.91 | cargo-1.89, rustc (>= 1.87) | rustc-1.91 | rustc-1.89, clang, libclang-dev, pkg-config, libfuse3-dev, libssl-dev, libzstd-dev, libacl1-dev, libsystemd-dev, libcrypt-dev, uuid-dev, zstd
+Build-Depends: debhelper (>= 13~), gcc, clang, libclang-dev, pkg-config, xz-utils, libfuse3-dev, libssl-dev, libzstd-dev, libacl1-dev, libsystemd-dev, libcrypt-dev, uuid-dev, zstd
 DEBTRANSFORM-TAR: proxmox-backup-client-4.2.0.tar.xz

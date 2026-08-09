@@ -1,22 +1,19 @@
 #!/usr/bin/make -f
 # Community/unofficial Proxmox Backup client build for Debian/Ubuntu targets on OBS.
 # Source0 is the self-contained bundle (see the .spec header): the proxmox-backup
-# workspace plus its path-patched sibling crates and a vendor/ dir. Builds offline.
+# workspace, its path-patched sibling crates, a vendor/ dir, and an offline Rust
+# toolchain (rust-<ver>-<triple>.tar.xz at the top). Builds fully offline.
 
 export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 export OPENSSL_NO_VENDOR = 1
 
-# Toolchain selection. Ubuntu 24.04's default rustc (1.74) is below the real MSRV
-# (1.87), so it ships versioned rustc-1.NN / cargo-1.NN packages instead; pull the
-# newest one via the build-dep alternatives and use it here. On Ubuntu 26.04 and
-# Debian 13 (backports rust) no versioned package is installed, so fall back to the
-# default cargo/rustc. (Lexical sort is fine for 1.NN two-digit minors.)
-CARGO := $(lastword $(sort $(wildcard /usr/bin/cargo-1.*)))
-RUSTC := $(lastword $(sort $(wildcard /usr/bin/rustc-1.*)))
-CARGO := $(if $(CARGO),$(CARGO),cargo)
-RUSTC := $(if $(RUSTC),$(RUSTC),rustc)
-export RUSTC
+# Bundled offline Rust toolchain — the build does not use the distro's rust.
+RUST_VERSION := 1.90.0
+DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null)
+RUST_TRIPLE := $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64,x86_64)-unknown-linux-gnu
+RUSTTC := $(CURDIR)/rusttc
+
 # pbs-buildcfg/build.rs embeds REPOID; without it it shells out to `git` (absent
 # in the build root, and the bundle carries no .git). Provide the version instead.
 export REPOID = $(shell dpkg-parsechangelog -SVersion 2>/dev/null | cut -d- -f1)
@@ -28,14 +25,18 @@ override_dh_auto_configure:
 	# dpkg-source strips cargo-vendor's *.orig files (they collide with dpkg's
 	# .orig/patch convention), breaking cargo's per-file checksum verification.
 	# Empty the per-file checksums but KEEP each crate's "package" sha (cargo
-	# verifies that against Cargo.lock). The files object has no nested braces,
-	# so a simple sed suffices — no python needed in the Debian build root.
-	# (Use xargs, not -exec: the sed replacement contains {}, which collides with
-	# find's {} placeholder.)
+	# verifies that against Cargo.lock). Use xargs, not -exec: the sed replacement
+	# contains {}, which collides with find's {} placeholder.
 	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
+	# Install the bundled Rust toolchain for this build arch.
+	tar -xf rust-$(RUST_VERSION)-$(RUST_TRIPLE).tar.xz
+	rust-$(RUST_VERSION)-$(RUST_TRIPLE)/install.sh --prefix=$(RUSTTC) \
+	  --disable-ldconfig --components=rustc,cargo,rust-std-$(RUST_TRIPLE)
 
 override_dh_auto_build:
-	cd proxmox-backup && $(CARGO) build --release --offline \
+	cd proxmox-backup && PATH=$(RUSTTC)/bin:$$PATH \
+	  LD_LIBRARY_PATH=$(RUSTTC)/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH} \
+	  cargo build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \
 	  -p pxar-bin              --bin pxar \
 	  -p proxmox-file-restore  --bin proxmox-file-restore
@@ -47,4 +48,4 @@ override_dh_auto_install:
 	# Handled via debian.*.install files (paths under proxmox-backup/).
 
 override_dh_auto_clean:
-	rm -rf proxmox-backup/target cargo-home
+	rm -rf proxmox-backup/target cargo-home rusttc rust-$(RUST_VERSION)-*
