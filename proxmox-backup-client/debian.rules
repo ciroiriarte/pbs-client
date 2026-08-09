@@ -7,6 +7,10 @@
 export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 export OPENSSL_NO_VENDOR = 1
+# Use pkgconf as the pkg-config implementation (only pkgconf is build-depended, so
+# zstd-sys's pkg-config crate must be told to use it — the `pkg-config` command may
+# be absent, and on Bullseye pkgconf and the pkg-config package conflict).
+export PKG_CONFIG = pkgconf
 
 # Bundled offline Rust toolchain — the build does not use the distro's rust.
 RUST_VERSION := 1.90.0
