@@ -87,5 +87,5 @@ https://github.com/ciroiriarte/pbs-client</description>
 
   <!-- Debian 11 (Bullseye) dropped: max rust is 1.63 (even rustc-mozilla),
        far below the real MSRV (1.87). Debian 13 (Trixie) ships ~1.85 and is
-       attempted with --ignore-rust-version in debian.rules. -->
+       attempted via the ignore-rust-version flag set in debian.rules. -->
 </project>
