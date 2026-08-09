@@ -30,8 +30,7 @@ prebuilt kernel/initramfs restore image) and the Windows client.
 Built from source on OBS. Status reflects the toolchains/base repos actually
 available on build.opensuse.org.
 
-The effective **MSRV is rust 1.87** (see notes). Targets below that, or without an
-aarch64 base on OBS, can't build.
+The effective **MSRV is rust 1.87** (see notes). **12 build targets are green.**
 
 | Distro | x86_64 | aarch64 | Notes |
 |--------|:------:|:-------:|-------|
@@ -42,13 +41,13 @@ aarch64 base on OBS, can't build.
 | Rocky Linux 10 | ✅ | — | no aarch64 base on OBS |
 | Rocky Linux 9 | ✅ | — | needs the noflush guard (libfuse3 3.10); no aarch64 base on OBS |
 | Ubuntu 26.04 | ✅ | ✅ | |
-| Ubuntu 24.04 | ⛔ | ⛔ | OBS mirror only ships rustc 1.74 |
-| Debian 13 (Trixie) | n/a | ⛔ | rustc 1.85 < 1.87; stable freezes rustc; rustup needs network |
-| Debian 11 (Bullseye) | n/a | ⛔ | rustc 1.63 (even rustc-mozilla) |
+| Ubuntu 24.04 | ✅ | ✅ | via versioned `rustc-1.91` from universe-update (default rustc 1.74 < MSRV) |
+| Debian 13 (Trixie) | — | ✅ | aarch64-only (no overlap with upstream amd64); rust 1.94 from trixie-backports |
+| Debian 11 (Bullseye) | — | ⛔ | rustc 1.63 max — below MSRV, no backport helps |
 
-Debian would be **aarch64-only** by design (Proxmox's official Debian client repo
-already covers x86_64), but no Debian on OBS meets the 1.87 MSRV, so it's not
-enabled. Blocked rows are toolchain/base-repo limits on OBS, not packaging bugs.
+Debian is **aarch64-only** by design: Proxmox's official Debian client repo already
+covers x86_64, so we only fill the arm64 gap. Blocked rows are toolchain/base-repo
+limits on OBS, not packaging bugs.
 
 ## Install
 
@@ -66,6 +65,7 @@ live index at
 | Rocky 10 | `RockyLinux_10` |
 | Ubuntu 24.04 | `Ubuntu_24.04` |
 | Ubuntu 26.04 | `Ubuntu_26.04` |
+| Debian 13 (arm64) | `Debian_13` |
 
 ### openSUSE (zypper)
 
@@ -157,11 +157,14 @@ tools/bump.py --checkout <checkout> --commit
   this is deterministic instead of heuristic.)
 - **Effective MSRV is rust 1.87** (edition 2021). Upstream *declares* 1.81, but the
   resolved graph needs more: `proxmox-time` uses a language feature stabilized in
-  1.86 and `proxmox-fixed-string` declares 1.87. All green targets ship rust ≥1.87
-  (EL9 is 1.92). Distros below it — Leap 15.6 (1.77), Ubuntu 24.04 (1.74 on the OBS
-  mirror), Debian 13 Trixie (1.85), Debian 11 (1.63) — have no viable newer-rust
-  source on OBS (rustup needs network; Debian stable freezes rustc), so they're
-  unsupported.
+  1.86 and `proxmox-fixed-string` declares 1.87. Older distros need a newer rust
+  source: **Ubuntu 24.04** uses the versioned `rustc-1.91`/`cargo-1.91` toolchain
+  from `universe-update` (via Build-Depends alternatives + toolchain auto-select in
+  `debian.rules`; the full Ubuntu pocket set — main+universe, GA+updates — must be
+  in the repo path so updated deps resolve). **Debian 13** uses `rustc 1.94` from
+  trixie-backports. Leap 15.6 (1.77, gcc15 dep won't resolve) and Debian 11 (1.63)
+  have no viable source and stay unsupported. rustup can't help — OBS build workers
+  are offline.
 - **EL9 fuse**: RHEL/Rocky 9 ships libfuse3 3.10, which lacks `fuse_file_info.noflush`
   (added in libfuse 3.16). `build_source.py` guards that field in `proxmox-fuse`'s
   `glue.c` (no-op on old libfuse, full functionality on ≥3.16) so EL9 builds the
