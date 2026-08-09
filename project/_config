@@ -17,14 +17,16 @@ Ignore: libclang-18-dev:libclang1-18
 Ignore: libclang-18-dev:libllvm18-dev
 Ignore: libclang-cpp18:libllvm18
 
-# Leap 15.6 ONLY: its base rust (1.77) is below MSRV 1.87. Pull rust1.97 from
-# devel:languages:rust, which needs gcc15 from devel:gcc. gcc15 requires the
-# UNFLAVORED "libgcc_s1 >= 15.3.0", but devel:gcc only ships the flavored
-# libgcc_s1-gcc15 — so Substitute bridges the flavored/unflavored gap. Guarded to
-# this repo so the other openSUSE targets keep their base libgcc_s1/libstdc++6.
-# Leap 15.6 NOTE: attempted rust1.97 + gcc15 from devel:languages:rust + devel:gcc.
-# gcc15 requires the unflavored gcc-15 runtime (libgcc_s1>=15.3 etc.) which only
-# exists flavored (-gcc15) on Leap 15.6, and OBS `Substitute` does NOT rewrite a
-# transitively-pulled package's own RPM requires (verified: full runtime Substitute
-# set still left gcc15 unresolvable; glibc 2.38 is present, so not the blocker).
-# No unflavored libgcc_s1>=15.3 exists for Leap 15.6 -> unsupported.
+# Leap 15.6 ONLY (guarded): base rust 1.77 < MSRV 1.87. rust1.97 (devel:rust) needs
+# gcc15 (devel:gcc), whose libgcc_s1>=15.3 is provided only by the flavored
+# libgcc_s1-gcc16, which Conflicts: the base libgcc_s1. The base libgcc_s1 is
+# inherited as Preinstall and OBS keeps preinstalled packages, so gcc15 was
+# uninstallable ("nothing provides gcc15"). `!libgcc_s1` drops that inherited
+# preinstall entry and injects libgcc_s1-gcc16 so the chroot bootstraps with the
+# gcc16 runtime (which Provides libgcc_s1 >= 15.3) — mirroring what zypper does on
+# a live system. (Substitute alone can't: it only rewrites direct BuildRequires.)
+%if "%_repository" == "openSUSE_Leap_15.6"
+Preinstall: !libgcc_s1 libgcc_s1-gcc16
+Support: !libgcc_s1 libgcc_s1-gcc16
+Prefer: libgcc_s1-gcc16 -libgcc_s1-gcc15 gcc15 gcc15-c++ cpp15 rust1.97 cargo1.97
+%endif
