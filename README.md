@@ -27,21 +27,25 @@ prebuilt kernel/initramfs restore image) and the Windows client.
 Built from source on OBS. Status reflects the toolchains/base repos actually
 available on build.opensuse.org.
 
+The effective **MSRV is rust 1.87** (see notes). Targets below that, or without an
+aarch64 base on OBS, can't build.
+
 | Distro | x86_64 | aarch64 | Notes |
 |--------|:------:|:-------:|-------|
 | openSUSE Tumbleweed | ✅ | ✅ | |
 | openSUSE Slowroll | ✅ | — | no aarch64 base on OBS |
 | openSUSE Leap 16.0 | ✅ | ✅ | |
-| openSUSE Leap 15.6 | ⛔ | ⛔ | base rust 1.77 < MSRV 1.81 |
+| openSUSE Leap 15.6 | ⛔ | ⛔ | rust 1.77; rust1.97 exists but its gcc15 dep won't resolve on OBS |
 | Rocky Linux 10 | ✅ | — | no aarch64 base on OBS |
 | Rocky Linux 9 | ✅ | — | needs the noflush guard (libfuse3 3.10); no aarch64 base on OBS |
 | Ubuntu 26.04 | ✅ | ✅ | |
-| Ubuntu 24.04 | ⛔ | ⛔ | OBS mirror only ships rustc 1.74 < MSRV 1.81 |
+| Ubuntu 24.04 | ⛔ | ⛔ | OBS mirror only ships rustc 1.74 |
+| Debian 13 (Trixie) | n/a | ⛔ | rustc 1.85 < 1.87; stable freezes rustc; rustup needs network |
+| Debian 11 (Bullseye) | n/a | ⛔ | rustc 1.63 (even rustc-mozilla) |
 
-> Note: Proxmox's official Debian `bookworm` client repo already works on Ubuntu
-> x86_64. This repo adds **aarch64**, non-Debian distros, and a single unified repo.
-> The blocked rows are toolchain/base-repo limits on OBS, not packaging bugs — see
-> "Notes / known risks".
+Debian would be **aarch64-only** by design (Proxmox's official Debian client repo
+already covers x86_64), but no Debian on OBS meets the 1.87 MSRV, so it's not
+enabled. Blocked rows are toolchain/base-repo limits on OBS, not packaging bugs.
 
 ## Install
 
@@ -127,12 +131,12 @@ osc meta prj     home:ciriarte:pbs-client -F project/_meta.xml
 osc meta prjconf home:ciriarte:pbs-client -F project/_config
 
 # Build the source bundle for the current version (clone + patch + vendor + tar)
-tools/build_source.py --version 4.2.0        # -> dist/proxmox-backup-client-4.2.0.tar.zst
+tools/build_source.py --version 4.2.0        # -> dist/proxmox-backup-client-4.2.0.tar.xz
 
 # Package: check out, add the bundle + recipe, commit
 osc co home:ciriarte:pbs-client proxmox-backup-client
 cd <checkout>
-cp ../../dist/proxmox-backup-client-4.2.0.tar.zst .
+cp ../../dist/proxmox-backup-client-4.2.0.tar.xz .
 cp -a <repo>/proxmox-backup-client/* .
 osc addremove && osc commit -m "Initial import (v4.2.0)"
 
@@ -148,15 +152,19 @@ tools/bump.py --checkout <checkout> --commit
   workspace requirements before building. `sources.json` records the exact pins.
   (Upstream proposal: ask Proxmox to publish per-release sibling commit hashes so
   this is deterministic instead of heuristic.)
-- **MSRV = rust 1.81** (edition 2021). Verified: v4.2.0 compiles clean on rustc
-  1.95 (no borrow-checker breakage). EL9 rust (1.92) is fine. Leap 15.6 (rust 1.77)
-  and the OBS Ubuntu 24.04 mirror (rustc 1.74) are below MSRV and have no viable
-  newer-rust source on build.opensuse.org — those targets are unsupported.
+- **Effective MSRV is rust 1.87** (edition 2021). Upstream *declares* 1.81, but the
+  resolved graph needs more: `proxmox-time` uses a language feature stabilized in
+  1.86 and `proxmox-fixed-string` declares 1.87. All green targets ship rust ≥1.87
+  (EL9 is 1.92). Distros below it — Leap 15.6 (1.77), Ubuntu 24.04 (1.74 on the OBS
+  mirror), Debian 13 Trixie (1.85), Debian 11 (1.63) — have no viable newer-rust
+  source on OBS (rustup needs network; Debian stable freezes rustc), so they're
+  unsupported.
 - **EL9 fuse**: RHEL/Rocky 9 ships libfuse3 3.10, which lacks `fuse_file_info.noflush`
   (added in libfuse 3.16). `build_source.py` guards that field in `proxmox-fuse`'s
   `glue.c` (no-op on old libfuse, full functionality on ≥3.16) so EL9 builds the
   full suite without shipping a replacement fuse3.
 - **Bundle size.** The assembled tarball carries five repos + ~456 vendored crates;
   it is large but self-contained and builds with no network.
-- `Rocky:10` / `Ubuntu:26.04` availability on build.opensuse.org should be
-  confirmed; stage them last if not yet published.
+- **aarch64** is only available where OBS mirrors that distro's aarch64 base repos
+  (Tumbleweed, Leap 16.0, Ubuntu 26.04). Slowroll and RockyLinux 9/10 have no
+  aarch64 base on OBS, so those stay x86_64-only.
