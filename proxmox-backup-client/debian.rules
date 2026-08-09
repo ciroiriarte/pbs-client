@@ -6,6 +6,17 @@
 export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
 export OPENSSL_NO_VENDOR = 1
+
+# Toolchain selection. Ubuntu 24.04's default rustc (1.74) is below the real MSRV
+# (1.87), so it ships versioned rustc-1.NN / cargo-1.NN packages instead; pull the
+# newest one via the build-dep alternatives and use it here. On Ubuntu 26.04 and
+# Debian 13 (backports rust) no versioned package is installed, so fall back to the
+# default cargo/rustc. (Lexical sort is fine for 1.NN two-digit minors.)
+CARGO := $(lastword $(sort $(wildcard /usr/bin/cargo-1.*)))
+RUSTC := $(lastword $(sort $(wildcard /usr/bin/rustc-1.*)))
+CARGO := $(if $(CARGO),$(CARGO),cargo)
+RUSTC := $(if $(RUSTC),$(RUSTC),rustc)
+export RUSTC
 # pbs-buildcfg/build.rs embeds REPOID; without it it shells out to `git` (absent
 # in the build root, and the bundle carries no .git). Provide the version instead.
 export REPOID = $(shell dpkg-parsechangelog -SVersion 2>/dev/null | cut -d- -f1)
@@ -24,7 +35,7 @@ override_dh_auto_configure:
 	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
 
 override_dh_auto_build:
-	cd proxmox-backup && cargo build --release --offline \
+	cd proxmox-backup && $(CARGO) build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \
 	  -p pxar-bin              --bin pxar \
 	  -p proxmox-file-restore  --bin proxmox-file-restore

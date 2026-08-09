@@ -61,7 +61,11 @@ https://github.com/ciroiriarte/pbs-client</description>
 
   <!-- ============================= Ubuntu ============================ -->
   <!-- OBS Ubuntu repositories are named "universe", not "standard". -->
+  <!-- Ubuntu 24.04 default rustc is 1.74 (< MSRV 1.87), but universe-update ships
+       versioned rustc-1.89/1.91 + cargo-1.89/1.91 toolchain packages; the build
+       pulls them via build-dep alternatives and debian.rules picks the newest. -->
   <repository name="Ubuntu_24.04">
+    <path project="Ubuntu:24.04" repository="universe-update"/>
     <path project="Ubuntu:24.04" repository="universe"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
