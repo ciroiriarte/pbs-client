@@ -28,13 +28,13 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <!-- Leap 15.6: rust1.97 (devel:languages:rust) + gcc15 (devel:gcc). Verified on
-       a real Leap 15.6 container that zypper resolves rust1.97 cleanly by upgrading
-       the unflavored libgcc_s1 to devel:gcc's gcc16 version (16.2.0 >= 15.3.0).
-       devel:gcc first so its newer libgcc_s1 wins over base. -->
+  <!-- Leap 15.6 NOT buildable on OBS (proven on a real Leap 15.6 container).
+       rust1.97 needs gcc15, which needs libgcc_s1>=15.3 — provided only by the
+       flavored libgcc_s1-gcc16 (16.2.0), which CONFLICTS with the base libgcc_s1.
+       zypper resolves this by DEINSTALLING/replacing base libgcc_s1; an OBS build
+       root is a fresh chroot where base libgcc_s1 is mandatory, so it can't. Deps
+       are meetable on a live system, just not in OBS's minimal build root. -->
   <repository name="openSUSE_Leap_15.6">
-    <path project="devel:languages:rust" repository="15.6"/>
-    <path project="devel:gcc" repository="openSUSE_Leap_15.6"/>
     <path project="openSUSE:Leap:15.6" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
