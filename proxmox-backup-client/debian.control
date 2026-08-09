@@ -29,7 +29,7 @@ Description: Proxmox Backup client (proxmox-backup-client, pxar)
  .
  Community/unofficial build from upstream Rust sources.
 
-Package: proxmox-file-restore
+Package: proxmox-backup-file-restore
 Architecture: amd64 arm64
 Depends: ${shlibs:Depends}, ${misc:Depends}, fuse3, proxmox-backup-client (= ${binary:Version})
 Description: Single-file restore for Proxmox Backup

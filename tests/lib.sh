@@ -54,16 +54,16 @@ add_repo_install() {  # $1=vm_ip $2=family $3=obs_repo_name
     suse)
       vssh "root@${ip}" "zypper --non-interactive ar -f -G ${repo}/${3}.repo pbs-client || zypper --non-interactive ar -f ${repo}/ pbs-client; \
         zypper --non-interactive --gpg-auto-import-keys refresh; \
-        zypper --non-interactive install proxmox-backup-client proxmox-file-restore" ;;
+        zypper --non-interactive install proxmox-backup-client proxmox-backup-file-restore" ;;
     el)
       vssh "root@${ip}" "dnf -y install dnf-plugins-core; \
         dnf config-manager --add-repo ${repo}/${3}.repo; \
-        dnf -y install proxmox-backup-client proxmox-file-restore" ;;
+        dnf -y install proxmox-backup-client proxmox-backup-file-restore" ;;
     deb)
       vssh "root@${ip}" "install -d /etc/apt/keyrings; \
         curl -fsSL ${repo}/Release.key | gpg --dearmor -o /etc/apt/keyrings/pbs-client.gpg; \
         echo 'deb [signed-by=/etc/apt/keyrings/pbs-client.gpg] ${repo}/ ./' > /etc/apt/sources.list.d/pbs-client.list; \
-        apt-get update; apt-get -y install proxmox-backup-client proxmox-file-restore" ;;
+        apt-get update; apt-get -y install proxmox-backup-client proxmox-backup-file-restore" ;;
     *) fail "unknown family ${family}"; return 1 ;;
   esac
 }

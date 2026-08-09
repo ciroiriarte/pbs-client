@@ -17,7 +17,10 @@ for distros where Proxmox ships no native packages.
 | Package | Binaries |
 |---------|----------|
 | `proxmox-backup-client` | `proxmox-backup-client`, `pxar` |
-| `proxmox-file-restore` | `proxmox-file-restore` (file-level restore of host/container backups) |
+| `proxmox-backup-file-restore` | `proxmox-file-restore` (file-level restore of host/container backups) |
+
+Package names mirror upstream Proxmox (the binary is `proxmox-file-restore`; the
+package is `proxmox-backup-file-restore`).
 
 **Out of scope:** the VM/block-image restore path (`proxmox-restore-daemon` + a
 prebuilt kernel/initramfs restore image) and the Windows client.
@@ -70,7 +73,7 @@ live index at
 BASE=https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/<REPO>
 sudo zypper addrepo -f -G "$BASE/home:ciriarte:pbs-client.repo"
 sudo zypper --gpg-auto-import-keys refresh
-sudo zypper install proxmox-backup-client proxmox-file-restore
+sudo zypper install proxmox-backup-client proxmox-backup-file-restore
 ```
 
 ### Rocky Linux (dnf)
@@ -79,7 +82,7 @@ sudo zypper install proxmox-backup-client proxmox-file-restore
 BASE=https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/<REPO>
 sudo dnf install -y dnf-plugins-core
 sudo dnf config-manager --add-repo "$BASE/home:ciriarte:pbs-client.repo"
-sudo dnf install -y proxmox-backup-client proxmox-file-restore
+sudo dnf install -y proxmox-backup-client proxmox-backup-file-restore
 ```
 
 ### Ubuntu (apt)
@@ -91,7 +94,7 @@ curl -fsSL "$BASE/Release.key" | sudo gpg --dearmor -o /etc/apt/keyrings/pbs-cli
 echo "deb [signed-by=/etc/apt/keyrings/pbs-client.gpg] $BASE/ ./" \
   | sudo tee /etc/apt/sources.list.d/pbs-client.list
 sudo apt-get update
-sudo apt-get install -y proxmox-backup-client proxmox-file-restore
+sudo apt-get install -y proxmox-backup-client proxmox-backup-file-restore
 ```
 
 ## How the build works (important)

@@ -43,12 +43,12 @@ archive tool.
 
 This is a community/unofficial build from upstream Rust sources.
 
-%package -n proxmox-file-restore
+%package -n proxmox-backup-file-restore
 Summary:        Single-file restore for Proxmox Backup
 Requires:       %{name} = %{version}-%{release}
 Requires:       fuse3
 
-%description -n proxmox-file-restore
+%description -n proxmox-backup-file-restore
 proxmox-file-restore performs file-level restore from Proxmox Backup Server
 snapshots (host and container backups). The VM/block-image restore path
 (proxmox-restore-daemon + a prebuilt restore image) is NOT included.
@@ -92,7 +92,7 @@ install -D -m 0644 zsh-completions/_proxmox-file-restore  %{buildroot}%{_datadir
 %{_datadir}/zsh/site-functions/_proxmox-backup-client
 %{_datadir}/zsh/site-functions/_pxar
 
-%files -n proxmox-file-restore
+%files -n proxmox-backup-file-restore
 %{_bindir}/proxmox-file-restore
 %dir %{_datadir}/zsh
 %dir %{_datadir}/zsh/site-functions
