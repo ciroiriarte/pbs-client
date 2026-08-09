@@ -28,11 +28,14 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <!-- Leap 15.6 UNSUPPORTED (base rust 1.77 < MSRV 1.87; gcc15's libgcc_s1-gcc16
-       runtime Conflicts the base libgcc_s1 and no OBS lever makes the build root
-       replace it — see project/_config). Leap 16.0 covers modern openSUSE. -->
+  <!-- Leap 15.6: final research-backed attempt. Base path is Leap:15.6:UPDATE
+       (how devel:languages:rust itself builds — Update ships an unflavored
+       libgcc_s1 from GCC 15), plus devel:rust (rust1.97) + devel:gcc (gcc15).
+       prjconf Preinstall !libgcc_s1 + inject libgcc_s1-gcc16 (16.2 >= 15.3). -->
   <repository name="openSUSE_Leap_15.6">
-    <path project="openSUSE:Leap:15.6" repository="standard"/>
+    <path project="devel:languages:rust" repository="15.6"/>
+    <path project="devel:gcc" repository="openSUSE_Leap_15.6"/>
+    <path project="openSUSE:Leap:15.6:Update" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
   </repository>
