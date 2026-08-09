@@ -63,13 +63,13 @@ https://github.com/ciroiriarte/pbs-client</description>
 
   <!-- ============================= Ubuntu ============================ -->
   <!-- OBS Ubuntu repositories are named "universe", not "standard". -->
-  <repository name="xUbuntu_24.04">
+  <repository name="Ubuntu_24.04">
     <path project="Ubuntu:24.04" repository="universe"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
   </repository>
 
-  <repository name="xUbuntu_26.04">
+  <repository name="Ubuntu_26.04">
     <path project="Ubuntu:26.04" repository="universe"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>

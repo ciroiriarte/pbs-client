@@ -57,8 +57,8 @@ live index at
 | Leap 15.6 | `openSUSE_Leap_15.6` |
 | Rocky 9 | `RockyLinux_9` |
 | Rocky 10 | `RockyLinux_10` |
-| Ubuntu 24.04 | `xUbuntu_24.04` |
-| Ubuntu 26.04 | `xUbuntu_26.04` |
+| Ubuntu 24.04 | `Ubuntu_24.04` |
+| Ubuntu 26.04 | `Ubuntu_26.04` |
 
 ### openSUSE (zypper)
 

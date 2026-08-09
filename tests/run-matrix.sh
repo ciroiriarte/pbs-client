@@ -27,7 +27,7 @@ declare -A OBSREPO=(
   [tumbleweed]=openSUSE_Tumbleweed  [slowroll]=openSUSE_Slowroll
   [leap15.6]=openSUSE_Leap_15.6     [leap16.0]=openSUSE_Leap_16.0
   [rocky9]=RockyLinux_9             [rocky10]=RockyLinux_10
-  [ubuntu24.04]=xUbuntu_24.04       [ubuntu26.04]=xUbuntu_26.04
+  [ubuntu24.04]=Ubuntu_24.04       [ubuntu26.04]=Ubuntu_26.04
 )
 
 ARCHES=(x86_64 aarch64)
