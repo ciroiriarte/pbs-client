@@ -28,11 +28,12 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <!-- Leap 15.6 DROPPED: base rust is 1.77 (< MSRV 1.81). Pulling rust 1.97 from
-       devel:languages:rust cascades into gcc15 (devel:gcc), which itself is not
-       installable in the Leap 15.6 build root — an unbounded toolchain chain.
-       Left here (base-only, stays unresolvable) rather than chasing it further. -->
+  <!-- Leap 15.6 base rust 1.77 < MSRV. Pull rust 1.97 from devel:languages:rust
+       (repo "15.6"); it needs gcc15 + the gcc15-flavored libgcc_s1/libstdc++6,
+       all in devel:gcc (repo openSUSE_Leap_15.6). Both toolchain paths first. -->
   <repository name="openSUSE_Leap_15.6">
+    <path project="devel:languages:rust" repository="15.6"/>
+    <path project="devel:gcc" repository="openSUSE_Leap_15.6"/>
     <path project="openSUSE:Leap:15.6" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
@@ -84,9 +85,7 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <repository name="Debian_11">
-    <path project="Debian:11" repository="backports"/>
-    <path project="Debian:11" repository="standard"/>
-    <arch>aarch64</arch>
-  </repository>
+  <!-- Debian 11 (Bullseye) dropped: max rust is 1.63 (even rustc-mozilla),
+       far below the real MSRV (1.87). Debian 13 (Trixie) ships ~1.85 and is
+       attempted with --ignore-rust-version in debian.rules. -->
 </project>
