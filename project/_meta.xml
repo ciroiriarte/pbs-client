@@ -28,11 +28,13 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <!-- Leap 15.6 unsupported: base rust 1.77 < MSRV 1.87. rust1.97 (devel:rust)
-       needs gcc15 (devel:gcc), which needs an UNFLAVORED gcc-15 runtime that only
-       exists on Tumbleweed; the flavored -gcc15 runtime can't satisfy it and OBS
-       Substitute doesn't rewrite gcc15's transitive requires. See project/_config. -->
+  <!-- Leap 15.6: rust1.97 (devel:languages:rust) + gcc15 (devel:gcc). Verified on
+       a real Leap 15.6 container that zypper resolves rust1.97 cleanly by upgrading
+       the unflavored libgcc_s1 to devel:gcc's gcc16 version (16.2.0 >= 15.3.0).
+       devel:gcc first so its newer libgcc_s1 wins over base. -->
   <repository name="openSUSE_Leap_15.6">
+    <path project="devel:languages:rust" repository="15.6"/>
+    <path project="devel:gcc" repository="openSUSE_Leap_15.6"/>
     <path project="openSUSE:Leap:15.6" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
