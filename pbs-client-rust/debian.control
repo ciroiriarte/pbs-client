@@ -1,0 +1,16 @@
+Source: pbs-client-rust
+Section: devel
+Priority: optional
+Maintainer: Ciro Iriarte <ciro.iriarte+software@gmail.com>
+Build-Depends: debhelper (>= 13~), xz-utils
+Standards-Version: 4.6.2
+Homepage: https://www.rust-lang.org
+
+Package: pbs-client-rust
+Architecture: amd64 arm64
+Depends: ${misc:Depends}
+Description: Private prebuilt Rust toolchain for building proxmox-backup-client
+ Prebuilt upstream Rust toolchain (rustc, cargo, rust-std) under
+ /opt/pbs-client-rust, used exclusively as a build dependency of
+ proxmox-backup-client so its build is independent of the distribution's Rust
+ version. Community/unofficial; not intended for end users.

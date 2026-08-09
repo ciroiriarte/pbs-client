@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+# pbs-client-rust: install the prebuilt upstream Rust toolchain into
+# /opt/pbs-client-rust. Build-only dependency of proxmox-backup-client. The two
+# per-arch toolchains live at the source top level (Source0 = pbs-client-rust-<ver>).
+
+RUST_VERSION := 1.90.0
+DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null)
+RUST_TRIPLE := $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64,x86_64)-unknown-linux-gnu
+PREFIX := /opt/pbs-client-rust
+DESTDIR := $(CURDIR)/debian/pbs-client-rust
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	# nothing to build — prebuilt drop
+
+override_dh_auto_install:
+	tar -xf rust-$(RUST_VERSION)-$(RUST_TRIPLE).tar.xz
+	rust-$(RUST_VERSION)-$(RUST_TRIPLE)/install.sh --prefix=$(DESTDIR)$(PREFIX) \
+	  --disable-ldconfig --components=rustc,cargo,rust-std-$(RUST_TRIPLE)
+	rm -f $(DESTDIR)$(PREFIX)/lib/rustlib/uninstall.sh \
+	      $(DESTDIR)$(PREFIX)/lib/rustlib/install.log \
+	      $(DESTDIR)$(PREFIX)/lib/rustlib/components \
+	      $(DESTDIR)$(PREFIX)/lib/rustlib/rust-installer-version
+
+# Prebuilt binaries — skip the dh steps that assume we compiled them.
+override_dh_strip:
+override_dh_dwz:
+override_dh_shlibdeps:
+override_dh_strip_nondeterminism:
+override_dh_auto_test:

@@ -37,9 +37,6 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SOURCES = HERE / "sources.json"
-# Offline Rust toolchain shipped inside the bundle (see tools/fetch_rust.sh and
-# the spec/debian.rules). Keep in sync with fetch_rust.sh's RUST_VERSION.
-RUST_VERSION = "1.90.0"
 
 
 def run(cmd, cwd=None, env=None):
@@ -212,17 +209,9 @@ def main() -> int:
         count = len(list((bundle / "vendor").iterdir()))
         print(f"Vendored {count} crates.")
 
-        # Ship the offline Rust toolchains (both arches) INSIDE proxmox-backup/ so
-        # the build uses them instead of distro rust. They go in the subdir (not the
-        # bundle top) because dpkg-source drops top-level tarballs but keeps subdir
-        # contents. Run tools/fetch_rust.sh first.
-        for arch in ("x86_64", "aarch64"):
-            rt = Path(args.out) / f"rust-{RUST_VERSION}-{arch}-unknown-linux-gnu.tar.xz"
-            if not rt.exists():
-                print(f"error: {rt} missing — run tools/fetch_rust.sh first", file=sys.stderr)
-                return 2
-            shutil.copy2(rt, pbs / rt.name)
-        print(f"Added Rust {RUST_VERSION} toolchains (x86_64, aarch64) to proxmox-backup/.")
+        # Note: Rust is NOT bundled here — it comes from the sibling pbs-client-rust
+        # package (built once from tools/build_rust_pkg.sh), which the client
+        # BuildRequires. This keeps the per-release bundle small.
 
         # Pack the bundle. Use xz, not zst: OBS's Debian debtransform only
         # unpacks .tar.gz/.bz2/.xz orig tarballs, and rpm handles .xz fine too,

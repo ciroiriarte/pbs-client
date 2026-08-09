@@ -1,8 +1,8 @@
 #!/usr/bin/make -f
 # Community/unofficial Proxmox Backup client build for Debian/Ubuntu targets on OBS.
 # Source0 is the self-contained bundle (see the .spec header): the proxmox-backup
-# workspace, its path-patched sibling crates, a vendor/ dir, and an offline Rust
-# toolchain (rust-<ver>-<triple>.tar.xz at the top). Builds fully offline.
+# workspace, its path-patched sibling crates, and a vendor/ dir. Builds fully
+# offline. Rust comes from the pbs-client-rust build dep (/opt/pbs-client-rust).
 
 export CARGO_HOME = $(CURDIR)/cargo-home
 export ZSTD_SYS_USE_PKG_CONFIG = 1
@@ -11,12 +11,6 @@ export OPENSSL_NO_VENDOR = 1
 # zstd-sys's pkg-config crate must be told to use it — the `pkg-config` command may
 # be absent, and on Bullseye pkgconf and the pkg-config package conflict).
 export PKG_CONFIG = pkgconf
-
-# Bundled offline Rust toolchain — the build does not use the distro's rust.
-RUST_VERSION := 1.90.0
-DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null)
-RUST_TRIPLE := $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64,x86_64)-unknown-linux-gnu
-RUSTTC := $(CURDIR)/rusttc
 
 # pbs-buildcfg/build.rs embeds REPOID; without it it shells out to `git` (absent
 # in the build root, and the bundle carries no .git). Provide the version instead.
@@ -34,13 +28,9 @@ override_dh_auto_configure:
 	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
 
 override_dh_auto_build:
-	# Install the bundled Rust toolchain for this arch (tarballs live in
-	# proxmox-backup/, which dpkg-source keeps) and build with it.
-	cd proxmox-backup && tar -xf rust-$(RUST_VERSION)-$(RUST_TRIPLE).tar.xz && \
-	  rust-$(RUST_VERSION)-$(RUST_TRIPLE)/install.sh --prefix=$(RUSTTC) \
-	    --disable-ldconfig --components=rustc,cargo,rust-std-$(RUST_TRIPLE) && \
-	  PATH=$(RUSTTC)/bin:$$PATH \
-	  LD_LIBRARY_PATH=$(RUSTTC)/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH} \
+	# Build with the prebuilt toolchain from the pbs-client-rust build dependency.
+	cd proxmox-backup && PATH=/opt/pbs-client-rust/bin:$$PATH \
+	  LD_LIBRARY_PATH=/opt/pbs-client-rust/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH} \
 	  cargo build --release --offline \
 	  -p proxmox-backup-client --bin proxmox-backup-client \
 	  -p pxar-bin              --bin pxar \
@@ -53,4 +43,4 @@ override_dh_auto_install:
 	# Handled via debian.*.install files (paths under proxmox-backup/).
 
 override_dh_auto_clean:
-	rm -rf proxmox-backup/target cargo-home rusttc rust-$(RUST_VERSION)-*
+	rm -rf proxmox-backup/target cargo-home

@@ -1,0 +1,5 @@
+-------------------------------------------------------------------
+Sat Aug 09 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Prebuilt Rust 1.90.0 toolchain packaged as a build dependency of
+  proxmox-backup-client (installs under /opt/pbs-client-rust).

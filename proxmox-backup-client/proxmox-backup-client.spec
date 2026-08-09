@@ -14,8 +14,6 @@
 # It builds fully offline; no source services or network at build time.
 #
 
-%global rust_version 1.90.0
-
 Name:           proxmox-backup-client
 Version:        4.2.0
 Release:        0
@@ -23,10 +21,10 @@ Summary:        Proxmox Backup client (proxmox-backup-client, pxar)
 License:        AGPL-3.0-or-later
 URL:            https://pbs.proxmox.com
 Source0:        proxmox-backup-client-%{version}.tar.xz
-# The bundle carries an offline Rust toolchain (rust-<ver>-<arch>.tar.xz at its
-# top level, added by tools/build_source.py) so the build does not depend on the
-# distro's rust — %build installs the arch-appropriate one below.
 
+# Rust comes from the sibling pbs-client-rust package (prebuilt toolchain under
+# /opt/pbs-client-rust), so the build is independent of the distro's rust version.
+BuildRequires:  pbs-client-rust
 BuildRequires:  zstd
 BuildRequires:  gcc
 BuildRequires:  gcc-c++
@@ -70,21 +68,12 @@ export OPENSSL_NO_VENDOR=1
 # in the build root, and the bundle carries no .git). Provide the version instead.
 export REPOID=%{version}
 
-case "$(uname -m)" in
-  x86_64)  triple=x86_64-unknown-linux-gnu ;;
-  aarch64) triple=aarch64-unknown-linux-gnu ;;
-  *) echo "unsupported arch $(uname -m)"; exit 1 ;;
-esac
+# Use the prebuilt toolchain from the pbs-client-rust build dependency.
+export PATH=/opt/pbs-client-rust/bin:$PATH
+export LD_LIBRARY_PATH=/opt/pbs-client-rust/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+rustc --version
 
 cd proxmox-backup
-# Install the bundled offline Rust toolchain for this build arch (the tarballs
-# live in proxmox-backup/) and use it instead of any distro rust.
-tar -xf rust-%{rust_version}-$triple.tar.xz
-rust-%{rust_version}-$triple/install.sh --prefix=%{_builddir}/rusttc \
-  --disable-ldconfig --components=rustc,cargo,rust-std-$triple >/dev/null
-export PATH=%{_builddir}/rusttc/bin:$PATH
-export LD_LIBRARY_PATH=%{_builddir}/rusttc/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
-rustc --version
 # Offline build against the bundled vendor/ (see proxmox-backup/.cargo/config.toml).
 cargo build --release --offline \
   -p proxmox-backup-client --bin proxmox-backup-client \
