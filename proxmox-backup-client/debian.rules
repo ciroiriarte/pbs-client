@@ -19,7 +19,9 @@ override_dh_auto_configure:
 	# Empty the per-file checksums but KEEP each crate's "package" sha (cargo
 	# verifies that against Cargo.lock). The files object has no nested braces,
 	# so a simple sed suffices — no python needed in the Debian build root.
-	find vendor -name .cargo-checksum.json -exec sed -i 's/"files":{[^}]*}/"files":{}/' {} +
+	# (Use xargs, not -exec: the sed replacement contains {}, which collides with
+	# find's {} placeholder.)
+	find vendor -name .cargo-checksum.json -print0 | xargs -0 sed -i 's/"files":{[^}]*}/"files":{}/'
 
 override_dh_auto_build:
 	cd proxmox-backup && cargo build --release --offline \
