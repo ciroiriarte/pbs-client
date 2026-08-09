@@ -6,8 +6,13 @@
 # listed package does not exist on a given distro.
 Prefer: cargo rust rust-std rust-toolset
 
-# Ubuntu 24.04 universe-update bumped clang-18 to ...-1ubuntu1 but did not mirror
-# a matching libllvm18 (only ...-1 is present). Both are upstream 18.1.3 (identical
-# ABI; only the packaging revision differs), so ignore clang-18's over-strict
-# exact-version dep on libllvm18 to let the build root form. Harmless elsewhere.
+# Ubuntu 24.04 universe-update bumped the clang-18 stack to ...-1ubuntu1 but did
+# not mirror the matching libclang1-18 / libllvm18 libraries (only ...-1 exist).
+# All are upstream 18.1.3 (identical ABI; only the packaging revision differs), so
+# ignore these over-strict exact-version deps to let the build root form. The
+# directives are harmless on distros that don't have these packages.
 Ignore: clang-18:libllvm18
+Ignore: clang-18:libclang1-18
+Ignore: libclang-18-dev:libclang1-18
+Ignore: libclang-18-dev:libllvm18-dev
+Ignore: libclang-cpp18:libllvm18
