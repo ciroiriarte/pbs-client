@@ -34,7 +34,7 @@ available on build.opensuse.org.
 | openSUSE Leap 16.0 | ✅ | ✅ | |
 | openSUSE Leap 15.6 | ⛔ | ⛔ | base rust 1.77 < MSRV 1.81 |
 | Rocky Linux 10 | ✅ | — | no aarch64 base on OBS |
-| Rocky Linux 9 | ⛔ | ⛔ | libfuse3 3.10 too old (proxmox-fuse needs ≥3.16) |
+| Rocky Linux 9 | ✅ | — | needs the noflush guard (libfuse3 3.10); no aarch64 base on OBS |
 | Ubuntu 26.04 | ✅ | ✅ | |
 | Ubuntu 24.04 | ⛔ | ⛔ | OBS mirror only ships rustc 1.74 < MSRV 1.81 |
 
@@ -149,9 +149,13 @@ tools/bump.py --checkout <checkout> --commit
   (Upstream proposal: ask Proxmox to publish per-release sibling commit hashes so
   this is deterministic instead of heuristic.)
 - **MSRV = rust 1.81** (edition 2021). Verified: v4.2.0 compiles clean on rustc
-  1.95 (no borrow-checker breakage). Leap/EL rust must be ≥ 1.81 — add
-  `devel:languages:rust` / EPEL9 to the relevant repo path if a distro's toolchain
-  is short.
+  1.95 (no borrow-checker breakage). EL9 rust (1.92) is fine. Leap 15.6 (rust 1.77)
+  and the OBS Ubuntu 24.04 mirror (rustc 1.74) are below MSRV and have no viable
+  newer-rust source on build.opensuse.org — those targets are unsupported.
+- **EL9 fuse**: RHEL/Rocky 9 ships libfuse3 3.10, which lacks `fuse_file_info.noflush`
+  (added in libfuse 3.16). `build_source.py` guards that field in `proxmox-fuse`'s
+  `glue.c` (no-op on old libfuse, full functionality on ≥3.16) so EL9 builds the
+  full suite without shipping a replacement fuse3.
 - **Bundle size.** The assembled tarball carries five repos + ~456 vendored crates;
   it is large but self-contained and builds with no network.
 - `Rocky:10` / `Ubuntu:26.04` availability on build.opensuse.org should be
