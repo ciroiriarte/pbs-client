@@ -5,3 +5,9 @@
 # updates, or EL's rust-toolset). `Prefer:` is advisory and harmless where a
 # listed package does not exist on a given distro.
 Prefer: cargo rust rust-std rust-toolset
+
+# Ubuntu 24.04 universe-update bumped clang-18 to ...-1ubuntu1 but did not mirror
+# a matching libllvm18 (only ...-1 is present). Both are upstream 18.1.3 (identical
+# ABI; only the packaging revision differs), so ignore clang-18's over-strict
+# exact-version dep on libllvm18 to let the build root form. Harmless elsewhere.
+Ignore: clang-18:libllvm18
