@@ -16,3 +16,14 @@ Ignore: clang-18:libclang1-18
 Ignore: libclang-18-dev:libclang1-18
 Ignore: libclang-18-dev:libllvm18-dev
 Ignore: libclang-cpp18:libllvm18
+
+# Leap 15.6 ONLY: its base rust (1.77) is below MSRV 1.87. Pull rust1.97 from
+# devel:languages:rust, which needs gcc15 from devel:gcc. gcc15 requires the
+# UNFLAVORED "libgcc_s1 >= 15.3.0", but devel:gcc only ships the flavored
+# libgcc_s1-gcc15 — so Substitute bridges the flavored/unflavored gap. Guarded to
+# this repo so the other openSUSE targets keep their base libgcc_s1/libstdc++6.
+%if "%_repository" == "openSUSE_Leap_15.6"
+Substitute: libgcc_s1 libgcc_s1-gcc15
+Substitute: libstdc++6 libstdc++6-gcc15
+Prefer: gcc15 gcc15-c++ cpp15 libgcc_s1-gcc15 libstdc++6-gcc15 rust1.97 cargo1.97
+%endif

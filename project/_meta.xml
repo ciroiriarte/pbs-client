@@ -28,10 +28,13 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>aarch64</arch>
   </repository>
 
-  <!-- Leap 15.6 DROPPED: real MSRV is 1.87; base rust is 1.77. rust1.97 from
-       devel:languages:rust needs gcc15, whose libgcc_s1>=15.3 requirement OBS
-       won't satisfy from devel:gcc's flavored runtime — an unresolvable cascade. -->
+  <!-- Leap 15.6 base rust 1.77 < MSRV 1.87. Pull rust1.97 from devel:languages:rust
+       (repo "15.6") + gcc15 from devel:gcc; the prjconf Substitute (guarded to this
+       repo) bridges gcc15's unflavored libgcc_s1>=15.3 to devel:gcc's flavored
+       libgcc_s1-gcc15. Toolchain paths first so they win. -->
   <repository name="openSUSE_Leap_15.6">
+    <path project="devel:languages:rust" repository="15.6"/>
+    <path project="devel:gcc" repository="openSUSE_Leap_15.6"/>
     <path project="openSUSE:Leap:15.6" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
