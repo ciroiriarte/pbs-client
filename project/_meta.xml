@@ -73,4 +73,20 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
   </repository>
+
+  <!-- ============================= Debian ============================ -->
+  <!-- aarch64 ONLY, on purpose: Proxmox's official Debian client repo covers
+       x86_64, so we deliberately do not overlap it and only fill the arm64 gap.
+       Debian 13 (Trixie) ships current rust; Debian 11 (Bullseye) rust may be
+       below MSRV 1.81 (backports added as a best-effort source). -->
+  <repository name="Debian_13">
+    <path project="Debian:13" repository="standard"/>
+    <arch>aarch64</arch>
+  </repository>
+
+  <repository name="Debian_11">
+    <path project="Debian:11" repository="backports"/>
+    <path project="Debian:11" repository="standard"/>
+    <arch>aarch64</arch>
+  </repository>
 </project>
