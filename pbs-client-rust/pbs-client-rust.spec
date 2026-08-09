@@ -18,6 +18,11 @@
 %global __brp_strip_comment_note %{nil}
 %global _build_id_links none
 %global prefix_dir /opt/pbs-client-rust
+# The toolchain's internal shared libs (libLLVM, librustc_driver, rust-std .so)
+# live under the prefix and are used only by its own binaries — don't let RPM's
+# auto-dep generator turn them into external Requires/Provides.
+%global __requires_exclude_from ^%{prefix_dir}/
+%global __provides_exclude_from ^%{prefix_dir}/
 
 Name:           pbs-client-rust
 Version:        %{rust_version}
