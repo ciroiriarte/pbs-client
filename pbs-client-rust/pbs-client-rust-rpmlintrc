@@ -1,0 +1,19 @@
+# pbs-client-rust ships a PREBUILT upstream Rust toolchain (under /opt/pbs-client-rust)
+# as a build-only, unpublished helper. Its binaries legitimately trip many rpmlint
+# checks that don't apply to a redistributed compiler drop; zero their badness so the
+# openSUSE build doesn't abort on the QA threshold.
+setBadness('filelist-forbidden-opt', 0)
+setBadness('binary-or-shlib-defines-rpath', 0)
+setBadness('binary-or-shlib-calls-gethostbyname', 0)
+setBadness('devel-file-in-non-devel-package', 0)
+setBadness('files-duplicated-waste', 0)
+setBadness('library-without-ldconfig-postin', 0)
+setBadness('library-without-ldconfig-postun', 0)
+setBadness('missing-hash-section', 0)
+setBadness('shared-library-not-executable', 0)
+setBadness('statically-linked-binary', 0)
+setBadness('position-independent-executable-suggested', 0)
+setBadness('unstripped-binary-or-object', 0)
+setBadness('arch-dependent-file-in-usr-lib', 0)
+setBadness('no-ldconfig-symlink', 0)
+setBadness('zero-length', 0)
