@@ -167,6 +167,25 @@ def main() -> int:
             return 2
         print("Sibling crate versions satisfy requirements.")
 
+        # EL9 compat: libfuse3 < 3.16 lacks fuse_file_info.noflush, which
+        # proxmox-fuse's glue.c accesses unconditionally. Guard it so the C
+        # symbols still exist (Rust links against them) but become no-ops on old
+        # libfuse. Version-guarded, so newer distros keep full functionality.
+        glue = bundle / "proxmox-fuse" / "src" / "glue.c"
+        if glue.exists():
+            g = glue.read_text()
+            if "MAKE_ACCESSORS(noflush)" in g and "FUSE_VERSION >= 316" not in g:
+                g = g.replace(
+                    "MAKE_ACCESSORS(noflush)",
+                    "#if FUSE_VERSION >= 316\n"
+                    "MAKE_ACCESSORS(noflush)\n"
+                    "#else\n"
+                    "extern void glue_set_ffi_noflush(struct fuse_file_info *ffi, unsigned int value) { (void)ffi; (void)value; }\n"
+                    "extern unsigned int glue_get_ffi_noflush(struct fuse_file_info *ffi) { (void)ffi; return 0; }\n"
+                    "#endif")
+                glue.write_text(g)
+                print("Patched proxmox-fuse glue.c: guard noflush for libfuse < 3.16 (EL9).")
+
         # Enable path patches; drop upstream's registry-replacement cargo config.
         n = enable_patches(pbs)
         print(f"Enabled {n} [patch.crates-io] path overrides.")
