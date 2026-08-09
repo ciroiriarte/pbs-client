@@ -22,19 +22,9 @@ Ignore: libclang-cpp18:libllvm18
 # UNFLAVORED "libgcc_s1 >= 15.3.0", but devel:gcc only ships the flavored
 # libgcc_s1-gcc15 — so Substitute bridges the flavored/unflavored gap. Guarded to
 # this repo so the other openSUSE targets keep their base libgcc_s1/libstdc++6.
-%if "%_repository" == "openSUSE_Leap_15.6"
-# gcc15 requires the FULL gcc-15 runtime set at >= 15.3.0 (unflavored), but
-# devel:gcc ships them only as -gcc15 flavored packages. Substitute every one so
-# gcc15 (hence rust1.97) becomes installable in the Leap 15.6 build root.
-Substitute: libgcc_s1 libgcc_s1-gcc15
-Substitute: libstdc++6 libstdc++6-gcc15
-Substitute: libasan8 libasan8-gcc15
-Substitute: libatomic1 libatomic1-gcc15
-Substitute: libgomp1 libgomp1-gcc15
-Substitute: libhwasan0 libhwasan0-gcc15
-Substitute: libitm1 libitm1-gcc15
-Substitute: liblsan0 liblsan0-gcc15
-Substitute: libtsan2 libtsan2-gcc15
-Substitute: libubsan1 libubsan1-gcc15
-Prefer: gcc15 gcc15-c++ cpp15 rust1.97 cargo1.97
-%endif
+# Leap 15.6 NOTE: attempted rust1.97 + gcc15 from devel:languages:rust + devel:gcc.
+# gcc15 requires the unflavored gcc-15 runtime (libgcc_s1>=15.3 etc.) which only
+# exists flavored (-gcc15) on Leap 15.6, and OBS `Substitute` does NOT rewrite a
+# transitively-pulled package's own RPM requires (verified: full runtime Substitute
+# set still left gcc15 unresolvable; glibc 2.38 is present, so not the blocker).
+# No unflavored libgcc_s1>=15.3 exists for Leap 15.6 -> unsupported.
