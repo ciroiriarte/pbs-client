@@ -17,16 +17,12 @@ Ignore: libclang-18-dev:libclang1-18
 Ignore: libclang-18-dev:libllvm18-dev
 Ignore: libclang-cpp18:libllvm18
 
-# Leap 15.6 ONLY (guarded): base rust 1.77 < MSRV 1.87. rust1.97 (devel:rust) needs
+# Leap 15.6 UNSUPPORTED. base rust 1.77 < MSRV 1.87. rust1.97 (devel:rust) needs
 # gcc15 (devel:gcc), whose libgcc_s1>=15.3 is provided only by the flavored
-# libgcc_s1-gcc16, which Conflicts: the base libgcc_s1. The base libgcc_s1 is
-# inherited as Preinstall and OBS keeps preinstalled packages, so gcc15 was
-# uninstallable ("nothing provides gcc15"). `!libgcc_s1` drops that inherited
-# preinstall entry and injects libgcc_s1-gcc16 so the chroot bootstraps with the
-# gcc16 runtime (which Provides libgcc_s1 >= 15.3) — mirroring what zypper does on
-# a live system. (Substitute alone can't: it only rewrites direct BuildRequires.)
-%if "%_repository" == "openSUSE_Leap_15.6"
-Preinstall: !libgcc_s1 libgcc_s1-gcc16
-Support: !libgcc_s1 libgcc_s1-gcc16
-Prefer: libgcc_s1-gcc16 -libgcc_s1-gcc15 gcc15 gcc15-c++ cpp15 rust1.97 cargo1.97
-%endif
+# libgcc_s1-gcc16, which Conflicts: the base libgcc_s1. Meetable on a LIVE system
+# (zypper replaces libgcc_s1 — verified on a real Leap 15.6 container), but every
+# OBS lever failed with "nothing provides gcc15": Substitute (full runtime set),
+# and Preinstall: !libgcc_s1 libgcc_s1-gcc16 (the fix Codex + Antigravity both
+# independently prescribed via /ccg). Repo paths/names verified correct. Only
+# untried option is shipping a custom unflavored libgcc_s1 wrapper package
+# (invasive). Deemed not worth it — Leap 16.0 covers modern openSUSE.
