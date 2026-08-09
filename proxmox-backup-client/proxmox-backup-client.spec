@@ -24,7 +24,7 @@ Source0:        proxmox-backup-client-%{version}.tar.xz
 
 BuildRequires:  zstd
 BuildRequires:  cargo
-BuildRequires:  rust >= 1.81
+BuildRequires:  rust >= 1.87
 BuildRequires:  clang
 BuildRequires:  llvm-devel
 BuildRequires:  pkgconfig

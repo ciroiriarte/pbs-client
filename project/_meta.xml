@@ -74,9 +74,14 @@ https://github.com/ciroiriarte/pbs-client</description>
   </repository>
 
   <!-- ============================= Debian ============================ -->
-  <!-- Debian aarch64 was requested (upstream ships only x86_64, so no overlap),
-       but is NOT buildable on OBS: the real MSRV is 1.87 while Trixie ships
-       rustc 1.85 and Bullseye 1.63. Debian stable freezes rustc for its whole
-       lifecycle, and rustup (Debian's newer-rust answer) needs network, which
-       OBS build workers don't have. Re-add if a newer rust ever lands here. -->
+  <!-- aarch64 ONLY, by design: Proxmox's official Debian client repo covers
+       x86_64, so we fill only the arm64 gap. Trixie's stable rustc is 1.85
+       (< MSRV 1.87), but trixie-backports ships rustc 1.94 — the backports path
+       first + Build-Depends rustc(>=1.87) forces the resolver to pick it.
+       Bullseye stays out (max rust 1.63, no backport helps). -->
+  <repository name="Debian_13">
+    <path project="Debian:13" repository="backports"/>
+    <path project="Debian:13" repository="standard"/>
+    <arch>aarch64</arch>
+  </repository>
 </project>
