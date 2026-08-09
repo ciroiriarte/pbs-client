@@ -17,14 +17,12 @@ Ignore: libclang-18-dev:libclang1-18
 Ignore: libclang-18-dev:libllvm18-dev
 Ignore: libclang-cpp18:libllvm18
 
-# Leap 15.6 (guarded): base rust 1.77 < MSRV 1.87. Combine all deep-research-
-# confirmed mechanisms: base path = Leap:15.6:Update (see _meta), Preinstall !
-# to drop the inherited base libgcc_s1 + inject the gcc16 runtime (16.2 >= gcc15's
-# 15.3 need), and Prefer to steer transitive pulls to the flavored runtime (the
-# base one must not re-enter transitively). Guarded so other openSUSE targets keep
-# their base runtime.
-%if "%_repository" == "openSUSE_Leap_15.6"
-Preinstall: !libgcc_s1 libgcc_s1-gcc16
-Support: !libgcc_s1 libgcc_s1-gcc16
-Prefer: libgcc_s1-gcc16 libstdc++6-gcc16 -libgcc_s1 -libgcc_s1-gcc15 gcc15 cpp15 rust1.97 cargo1.97
-%endif
+# Leap 15.6 UNSUPPORTED (research-complete; see project-memory). base rust 1.77 <
+# MSRV 1.87. rust>=1.87 in devel:languages:rust/15.6 all need gcc15, which needs
+# libgcc_s1>=15.3, provided only by flavored libgcc_s1-gcc16 (Conflicts base). Two
+# upstream-controlled blockers: (1) OBS resolves Preinstall packages from the BASE
+# repo only, so `Preinstall: !libgcc_s1 libgcc_s1-gcc16` fails with "nothing
+# provides libgcc_s1-gcc16" (devel:gcc is a path, not the base); (2) the correct
+# base openSUSE:Leap:15.6:Update ships unflavored libgcc_s1 only at GCC 15.2.0,
+# below the 15.3.0 gcc15 needs. Fixable only upstream (Update ships 15.3+, or a
+# rust>=1.87 built against gcc<=15.2). Leap 16.0 covers modern openSUSE.
