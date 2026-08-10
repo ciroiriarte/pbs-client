@@ -10,6 +10,12 @@
 
 %global rust_version 1.90.0
 # It's a prebuilt binary drop; skip the RPM machinery that assumes we compiled it.
+# Disabling the whole post-install pipeline is deliberate and load-bearing: on
+# openSUSE Leap 15.6 (rpm 4.14) the per-brp overrides below are NOT enough — a strip
+# step still ran and truncated the prebuilt toolchain (rustc/librustc_driver shrank
+# by ~2.4 MB), which made the dlopened librustc_driver segfault at runtime. Nil-ing
+# __os_install_post replaces that pipeline entirely and keeps the binaries pristine.
+%global __os_install_post %{nil}
 %global debug_package %{nil}
 %define __strip /bin/true
 %global __brp_check_rpaths %{nil}
