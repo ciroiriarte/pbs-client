@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Aug 11 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Add Debian package architecture support for armhf and ppc64el.
+- Patch bundled upstream sources for 32-bit libc::time_t, ARM32
+  libc field widths including fuse-loop and pbs-client pxar
+  create/extract/metadata stat/offset conversions, and ppc64le
+  pbs-buildcfg multiarch detection.
+
+-------------------------------------------------------------------
 Fri Aug 08 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Initial community/unofficial packaging of the Proxmox Backup client

@@ -1,5 +1,12 @@
 pbs-client-rust (1.90.0-0) unstable; urgency=medium
 
+  * Add prebuilt Rust host toolchains for armv7/armhf and ppc64le.
+  * Enable package builds on armhf and ppc64el.
+
+ -- Ciro Iriarte <ciro.iriarte+software@gmail.com>  Tue, 11 Aug 2026 00:00:00 +0000
+
+pbs-client-rust (1.90.0-0) unstable; urgency=medium
+
   * Prebuilt Rust 1.90.0 toolchain packaged for use as a build dependency of
     proxmox-backup-client (installs under /opt/pbs-client-rust).
 

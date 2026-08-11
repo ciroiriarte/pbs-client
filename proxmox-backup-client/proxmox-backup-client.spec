@@ -59,6 +59,28 @@ snapshots (host and container backups). The VM/block-image restore path
 
 %prep
 %autosetup -n proxmox-backup-client-%{version}
+# ARM32 libc::stat compatibility for pbs-fuse-loop. Keep internal inode/size
+# semantics wide; widen libc inode reads and checked-convert st_size writes.
+sed -i 's/EntryParam::simple(stat\.st_ino, stat)/EntryParam::simple(stat.st_ino as u64, stat)/' \
+  proxmox-backup/pbs-fuse-loop/src/fuse_loop.rs
+sed -i '/stat\.st_size = size;/c\    stat.st_size = size.try_into()\
+        .expect("size does not fit into st_size field");' \
+  proxmox-backup/pbs-fuse-loop/src/fuse_loop.rs
+# ARM32 libc::stat compatibility for pbs-client pxar. Widen narrow libc
+# reads (st_ino u32, st_mtime/f_type i32); checked-convert values written
+# into libc off_t/time_t so oversized files/timestamps fail loudly.
+sed -i \
+  -e 's|Ok(fs_stat.f_type)|Ok(fs_stat.f_type as i64)|' \
+  -e 's|st_ino: stat.st_ino,|st_ino: stat.st_ino as u64,|g' \
+  -e 's|add_file(c_file_name, file_size, stat.st_mtime)|add_file(c_file_name, file_size, stat.st_mtime as i64)|' \
+  -e 's|StatxTimestamp::new(stat.st_mtime, stat.st_mtime_nsec as u32)|StatxTimestamp::new(stat.st_mtime as i64, stat.st_mtime_nsec as u32)|' \
+  proxmox-backup/pbs-client/src/pxar/create.rs
+sed -i 's|nix::unistd::ftruncate(&file, size as i64)|nix::unistd::ftruncate(\&file, size.try_into().context("file size does not fit into off_t")?)|g' \
+  proxmox-backup/pbs-client/src/pxar/extract.rs
+sed -i \
+  -e 's|tv_nsec: UTIME_OMIT,|tv_nsec: UTIME_OMIT as libc::c_long,|' \
+  -e 's|tv_sec: mtime.secs,|tv_sec: mtime.secs.try_into().expect("mtime seconds do not fit into libc::time_t"),|' \
+  proxmox-backup/pbs-client/src/pxar/metadata.rs
 
 %build
 export CARGO_HOME=%{_builddir}/cargo-home

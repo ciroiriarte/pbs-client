@@ -4,9 +4,9 @@
 # the same idea as the rustup step other builds use, but offline, because OBS
 # build workers have no network).
 #
-# Output: dist/rust-<ver>-{x86_64,aarch64}-unknown-linux-gnu.tar.xz
+# Output: dist/rust-<ver>-{x86_64,aarch64,powerpc64le}-unknown-linux-gnu plus armv7-unknown-linux-gnueabihf.tar.xz
 # These are large (~150-200 MB each), git-ignored, and committed to the OBS
-# package as Source1/Source2. Re-run only when RUST_VERSION changes.
+# package inside Source0. Re-run only when RUST_VERSION changes.
 set -euo pipefail
 
 RUST_VERSION="${RUST_VERSION:-1.90.0}"
@@ -14,8 +14,13 @@ BASE="https://static.rust-lang.org/dist"
 OUT="$(cd "$(dirname "$0")/.." && pwd)/dist"
 mkdir -p "$OUT"
 
-for arch in x86_64 aarch64; do
-  f="rust-${RUST_VERSION}-${arch}-unknown-linux-gnu.tar.xz"
+for triple in \
+  x86_64-unknown-linux-gnu \
+  aarch64-unknown-linux-gnu \
+  armv7-unknown-linux-gnueabihf \
+  powerpc64le-unknown-linux-gnu
+do
+  f="rust-${RUST_VERSION}-${triple}.tar.xz"
   if [ -f "$OUT/$f" ]; then echo "have $f"; continue; fi
   echo "downloading $f ..."
   curl -fSL "$BASE/$f" -o "$OUT/$f.tmp"

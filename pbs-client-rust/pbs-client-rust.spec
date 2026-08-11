@@ -37,7 +37,7 @@ Summary:        Private prebuilt Rust toolchain for building proxmox-backup-clie
 License:        (MIT OR Apache-2.0)
 URL:            https://www.rust-lang.org
 Source0:        pbs-client-rust-%{version}.tar.gz
-ExclusiveArch:  x86_64 aarch64
+ExclusiveArch:  x86_64 aarch64 armv7hl ppc64le
 BuildRequires:  tar
 BuildRequires:  xz
 
@@ -55,6 +55,8 @@ its build is independent of the distribution's Rust version. Community/unofficia
 case "$(uname -m)" in
   x86_64)  triple=x86_64-unknown-linux-gnu ;;
   aarch64) triple=aarch64-unknown-linux-gnu ;;
+  armv7l|armv7hl) triple=armv7-unknown-linux-gnueabihf ;;
+  ppc64le) triple=powerpc64le-unknown-linux-gnu ;;
   *) echo "unsupported arch $(uname -m)"; exit 1 ;;
 esac
 tar -xf rust-%{rust_version}-$triple.tar.xz

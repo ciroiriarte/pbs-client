@@ -1,11 +1,14 @@
 #!/usr/bin/make -f
 # pbs-client-rust: install the prebuilt upstream Rust toolchain into
-# /opt/pbs-client-rust. Build-only dependency of proxmox-backup-client. The two
-# per-arch toolchains live at the source top level (Source0 = pbs-client-rust-<ver>).
+# /opt/pbs-client-rust. Build-only dependency of proxmox-backup-client. The per-arch toolchains live at the source top level (Source0 = pbs-client-rust-<ver>).
 
 RUST_VERSION := 1.90.0
 DEB_HOST_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null)
-RUST_TRIPLE := $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64,x86_64)-unknown-linux-gnu
+RUST_TRIPLE := $(strip \
+  $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64-unknown-linux-gnu,\
+  $(if $(filter armhf,$(DEB_HOST_ARCH)),armv7-unknown-linux-gnueabihf,\
+  $(if $(filter ppc64el,$(DEB_HOST_ARCH)),powerpc64le-unknown-linux-gnu,\
+  x86_64-unknown-linux-gnu))))
 PREFIX := /opt/pbs-client-rust
 DESTDIR := $(CURDIR)/debian/pbs-client-rust
 

@@ -1,5 +1,15 @@
 proxmox-backup-client (4.2.0-0) unstable; urgency=medium
 
+  * Add binary package architecture support for armhf and ppc64el.
+  * Patch bundled upstream sources for 32-bit libc::time_t, ARM32
+    libc field widths including fuse-loop and pbs-client pxar
+    create/extract/metadata stat/offset conversions, and ppc64le
+    pbs-buildcfg multiarch detection.
+
+ -- Ciro Iriarte <ciro.iriarte+software@gmail.com>  Tue, 11 Aug 2026 00:00:00 +0000
+
+proxmox-backup-client (4.2.0-0) unstable; urgency=medium
+
   * Initial community/unofficial packaging of the Proxmox Backup client suite
     (proxmox-backup-client, pxar, proxmox-file-restore) built from upstream
     Rust sources at tag v4.2.0.

@@ -20,7 +20,7 @@ Standards-Version: 4.6.2
 Homepage: https://pbs.proxmox.com
 
 Package: proxmox-backup-client
-Architecture: amd64 arm64
+Architecture: amd64 arm64 armhf ppc64el
 Depends: ${shlibs:Depends}, ${misc:Depends}, fuse3
 Description: Proxmox Backup client (proxmox-backup-client, pxar)
  Command-line client for Proxmox Backup Server: create and restore
@@ -30,7 +30,7 @@ Description: Proxmox Backup client (proxmox-backup-client, pxar)
  Community/unofficial build from upstream Rust sources.
 
 Package: proxmox-backup-file-restore
-Architecture: amd64 arm64
+Architecture: amd64 arm64 armhf ppc64el
 Depends: ${shlibs:Depends}, ${misc:Depends}, fuse3, proxmox-backup-client (= ${binary:Version})
 Description: Single-file restore for Proxmox Backup
  File-level restore from Proxmox Backup Server snapshots (host and

@@ -10,13 +10,15 @@ https://github.com/ciroiriarte/pbs-client</description>
        so it needs only base gcc/clang/fuse3/etc. from each distro — no distro
        rust, no versioned-toolchain or backports gymnastics. Repositories below
        therefore just point at each distro's base + the -devel repo where needed.
-       aarch64 is enabled only where OBS mirrors that distro's aarch64 base. -->
+       ARM/PowerPC arches are enabled only where OBS mirrors compatible bases and Rust publishes host tools. -->
 
   <!-- ============================ openSUSE ============================ -->
   <repository name="openSUSE_Tumbleweed">
-    <path project="openSUSE:Factory" repository="snapshot"/>
+    <path project="openSUSE:Tumbleweed" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <!-- openSUSE:Slowroll publishes x86_64 only on OBS. -->
@@ -29,6 +31,7 @@ https://github.com/ciroiriarte/pbs-client</description>
     <path project="openSUSE:Leap:16.0" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <!-- Leap 15.6 now builds: base rust (1.77) no longer matters — the bundled
@@ -37,12 +40,16 @@ https://github.com/ciroiriarte/pbs-client</description>
     <path project="openSUSE:Leap:15.6" repository="standard"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <!-- ======================= RHEL-compatible ========================= -->
   <!-- Base system from baseos+appstream; -devel build deps (fuse3-devel, etc.)
-       from CRB. x86_64 only — OBS does not mirror the RockyLinux aarch64 base.
-       (Oracle/Alma 9/10 users can consume these EL RPMs directly.) -->
+       from CRB. x86_64 only: OBS lists aarch64 as a scheduler arch for these
+       repos but only partially mirrors the aarch64 base (RockyLinux:9 baseos
+       has ~128 aarch64 binaries vs ~928 for x86_64, no rpm/base set), so the
+       aarch64 build root can't form ("nothing provides rpm"). ARM32/PowerPC EL
+       bases are likewise unavailable. -->
   <repository name="RockyLinux_9">
     <path project="RockyLinux:9" repository="baseos"/>
     <path project="RockyLinux:9" repository="appstream"/>
@@ -64,30 +71,40 @@ https://github.com/ciroiriarte/pbs-client</description>
     <path project="Ubuntu:24.04" repository="universe"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <repository name="Ubuntu_26.04">
     <path project="Ubuntu:26.04" repository="universe"/>
     <arch>x86_64</arch>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <!-- ============================= Debian ============================ -->
-  <!-- aarch64 ONLY, by design: Proxmox's official Debian client repo covers
-       x86_64, so we only fill the arm64 gap. Bundled rust removes the MSRV wall,
-       so Bullseye/Bookworm/Trixie all build now. -->
+  <!-- Non-amd64 by design: Proxmox's official Debian client repo covers x86_64,
+       so we fill the arm64/armhf/ppc64el gaps where OBS has workers. Bundled
+       rust removes the MSRV wall, so Bullseye/Bookworm/Trixie all build now. -->
   <repository name="Debian_13">
     <path project="Debian:13" repository="standard"/>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <repository name="Debian_12">
     <path project="Debian:12" repository="standard"/>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 
   <repository name="Debian_11">
     <path project="Debian:11" repository="standard"/>
     <arch>aarch64</arch>
+    <arch>armv7l</arch>
+    <arch>ppc64le</arch>
   </repository>
 </project>

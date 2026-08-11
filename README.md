@@ -27,34 +27,32 @@ prebuilt kernel/initramfs restore image) and the Windows client.
 
 ## Supported targets
 
-Built from source on OBS. Status reflects the toolchains/base repos actually
-available on build.opensuse.org.
+Built from source on OBS. Status reflects the Rust host toolchains and base repos
+actually available on build.opensuse.org.
 
 The build depends on a prebuilt Rust toolchain (see "How the build works"), so
 the distro's rust version is irrelevant — the MSRV wall is gone. The matrix
-covers openSUSE Tumbleweed/Slowroll/Leap 16.0/Leap 15.6, Rocky Linux 9/10, and
-Ubuntu 24.04/26.04 on x86_64 (plus aarch64 where OBS mirrors an aarch64 base for
-that distro), and Debian 11/12/13 aarch64-only — see the table below for
-per-target status.
+covers openSUSE Tumbleweed/Slowroll/Leap 16.0/Leap 15.6, Rocky Linux 9/10,
+Ubuntu 24.04/26.04, and Debian 11/12/13 on the architectures shown below.
+Secondary architectures are enabled only where both OBS workers/base repos and
+Rust host toolchains are available.
 
-| Distro | x86_64 | aarch64 | Notes |
-|--------|:------:|:-------:|-------|
-| openSUSE Tumbleweed | ✅ | ✅ | |
-| openSUSE Slowroll | ✅ | — | no aarch64 base on OBS |
-| openSUSE Leap 16.0 | ✅ | ✅ | |
-| openSUSE Leap 15.6 | ✅ | ✅ | |
-| Rocky Linux 9 | ✅ | — | noflush guard (libfuse3 3.10); no aarch64 base on OBS |
-| Rocky Linux 10 | ✅ | — | no aarch64 base on OBS |
-| Ubuntu 24.04 | ✅ | ✅ | |
-| Ubuntu 26.04 | ✅ | ✅ | |
-| Debian 11 (Bullseye) | — | ✅ | aarch64-only (no overlap with upstream amd64) |
-| Debian 12 (Bookworm) | — | ✅ | aarch64-only |
-| Debian 13 (Trixie) | — | ✅ | aarch64-only |
+| Distro | x86_64 | aarch64 | armv7l / armhf | ppc64le / ppc64el | Notes |
+|--------|:------:|:-------:|:--------------:|:-----------------:|-------|
+| openSUSE Tumbleweed | ✅ | ✅ | ✅ | ✅ | uses the Tumbleweed standard repo for ports |
+| openSUSE Slowroll | ✅ | — | — | — | no secondary-arch base on OBS |
+| openSUSE Leap 16.0 | ✅ | ✅ | — | ✅ | no armv7l base |
+| openSUSE Leap 15.6 | ✅ | ✅ | — | ✅ | no armv7l base |
+| Rocky Linux 9 | ✅ | — | — | — | EL secondary arches not enabled in this project |
+| Rocky Linux 10 | ✅ | — | — | — | EL secondary arches not enabled in this project |
+| Ubuntu 24.04 | ✅ | ✅ | ✅ | ✅ | |
+| Ubuntu 26.04 | ✅ | ✅ | ✅ | ✅ | |
+| Debian 11 (Bullseye) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
+| Debian 12 (Bookworm) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
+| Debian 13 (Trixie) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
 
-Debian is **aarch64-only** by design: Proxmox's official Debian client repo already
-covers x86_64, so we only fill the arm64 gap. The only "—" cells are aarch64 for
-Slowroll / Rocky, for which OBS mirrors no aarch64 base (Oracle/Alma 9/10 users can
-consume the Rocky EL RPMs directly).
+Debian remains **non-amd64** by design: Proxmox's official Debian client repo
+already covers x86_64, so this project fills the arm64/armhf/ppc64el gaps.
 
 ## Install
 
@@ -72,9 +70,9 @@ live index at
 | Rocky 10 | `RockyLinux_10` |
 | Ubuntu 24.04 | `Ubuntu_24.04` |
 | Ubuntu 26.04 | `Ubuntu_26.04` |
-| Debian 11 (arm64) | `Debian_11` |
-| Debian 12 (arm64) | `Debian_12` |
-| Debian 13 (arm64) | `Debian_13` |
+| Debian 11 (arm64/armhf/ppc64el) | `Debian_11` |
+| Debian 12 (arm64/armhf/ppc64el) | `Debian_12` |
+| Debian 13 (arm64/armhf/ppc64el) | `Debian_13` |
 
 ### openSUSE (zypper)
 
@@ -119,7 +117,8 @@ overrides upstream ships commented-out, and vendor only the third-party crates.
 
 The Rust toolchain no longer travels with the client bundle. It now lives in a
 separate, build-only OBS package, **`pbs-client-rust`**, which installs the
-prebuilt upstream toolchain (rustc/cargo/rust-std for x86_64 + aarch64) to
+prebuilt upstream toolchain (rustc/cargo/rust-std for x86_64, aarch64,
+armv7, and ppc64le) to
 `/opt/pbs-client-rust`. Its `Source0` is `pbs-client-rust-<ver>.tar.gz` (built by
 `tools/build_rust_pkg.sh`, upstream tarballs fetched by `tools/fetch_rust.sh`),
 uploaded once and shared by every distro/arch build. The package has
@@ -153,7 +152,7 @@ pbs-client-rust/               # build-only helper osc package (publish-disabled
   pbs-client-rust-rpmlintrc
   debian.rules|control|compat|changelog     # Debian recipe
   pbs-client-rust.dsc
-  pbs-client-rust-<ver>.tar.gz              # prebuilt rustc/cargo/rust-std (x86_64+aarch64)
+  pbs-client-rust-<ver>.tar.gz              # prebuilt rustc/cargo/rust-std (x86_64+aarch64+armv7+ppc64le)
 project/
   _meta.xml                   # distro/arch matrix   (osc meta prj -F)
   _config                     # prjconf (rust preference, deb support)
@@ -204,7 +203,7 @@ tools/bump.py --checkout <checkout> --commit
   its `RUST_VERSION` (pinned in `tools/fetch_rust.sh` / `build_rust_pkg.sh` / the
   recipes) via `/opt/pbs-client-rust`. Bump rust by changing those pins and
   re-running `fetch_rust.sh` + `build_rust_pkg.sh`, then rebuilding the
-  `pbs-client-rust` package. The ~356 MB toolchain tarball is uploaded once and
+  `pbs-client-rust` package. The ~846 MB toolchain tarball is uploaded once and
   shared by every distro/arch build instead of being embedded per-release in the
   client bundle, so the client source stays small and end-user package/repo size
   is unaffected.
@@ -221,6 +220,8 @@ tools/bump.py --checkout <checkout> --commit
   crates but no embedded Rust toolchain, so it stays slim (~53 MB); it is
   self-contained and builds with no network, given the `pbs-client-rust` build
   dependency.
-- **aarch64** is only available where OBS mirrors that distro's aarch64 base repos
-  (Tumbleweed, Leap 16.0, Ubuntu 26.04). Slowroll and RockyLinux 9/10 have no
-  aarch64 base on OBS, so those stay x86_64-only.
+- **Secondary architectures** are only enabled where OBS mirrors a compatible base
+  repo and Rust publishes native host tools. ARM32 uses Rust's
+  `armv7-unknown-linux-gnueabihf` toolchain (Debian/Ubuntu package arch `armhf`,
+  OBS arch `armv7l`); PowerPC uses `powerpc64le-unknown-linux-gnu` (Debian/Ubuntu
+  package arch `ppc64el`, OBS/RPM arch `ppc64le`).

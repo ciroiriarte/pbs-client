@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 11 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Add prebuilt Rust host toolchains for armv7/armhf and ppc64le.
+- Enable pbs-client-rust builds on armv7l/armhf and ppc64le/ppc64el.
+
+-------------------------------------------------------------------
 Sat Aug 09 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Prebuilt Rust 1.90.0 toolchain packaged as a build dependency of

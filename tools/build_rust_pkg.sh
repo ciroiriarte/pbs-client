@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build the source tarball for the pbs-client-rust OBS package: a single
 # xz tarball whose top dir holds the per-arch official Rust toolchains. Committed
-# ONCE to the pbs-client-rust package (re-done only on a rust-version bump), so the
+# once to the pbs-client-rust package (re-done only on a rust-version bump), so the
 # per-release proxmox-backup-client bundle stays small. Run tools/fetch_rust.sh first.
 set -euo pipefail
 
@@ -13,8 +13,13 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
 mkdir -p "$work/$top"
-for arch in x86_64 aarch64; do
-  f="rust-${RUST_VERSION}-${arch}-unknown-linux-gnu.tar.xz"
+for triple in \
+  x86_64-unknown-linux-gnu \
+  aarch64-unknown-linux-gnu \
+  armv7-unknown-linux-gnueabihf \
+  powerpc64le-unknown-linux-gnu
+do
+  f="rust-${RUST_VERSION}-${triple}.tar.xz"
   [ -f "$DIST/$f" ] || { echo "missing $DIST/$f — run tools/fetch_rust.sh"; exit 1; }
   cp "$DIST/$f" "$work/$top/"
 done
