@@ -226,9 +226,38 @@ def main() -> int:
                 patched_sys = True
             timer = proxmox_sys / "linux" / "timer.rs"
             tm = timer.read_text()
+            timer_changed = False
             if "tv_sec: value.as_secs() as libc::time_t" not in tm:
                 tm = tm.replace("            tv_sec: value.as_secs() as i64,\n", "            tv_sec: value.as_secs() as libc::time_t,\n", 1)
                 tm = tm.replace("            tv_nsec: value.subsec_nanos() as i64,\n", "            tv_nsec: value.subsec_nanos() as libc::c_long,\n", 1)
+                timer_changed = True
+            # Architecture compat: on s390x, libc::sigaction carries a private
+            # `__glibc_reserved0` field (between sa_sigaction and sa_flags), so it
+            # cannot be built with struct-literal syntax. Construct it from a
+            # zeroed value and assign only the public fields — behaviour-identical
+            # on every arch (the reserved field stays zeroed everywhere).
+            sigaction_literal = (
+                'let sa = libc::sigaction {\n'
+                '            sa_sigaction:\n'
+                '                // libc::sigaction uses `usize` for the function pointer...\n'
+                '                sig_timeout_handler as *const extern "C" fn(i32) as usize,\n'
+                '            sa_mask: sa_mask.assume_init(),\n'
+                '            sa_flags: 0,\n'
+                '            sa_restorer: None,\n'
+                '        };'
+            )
+            sigaction_zeroed = (
+                'let mut sa: libc::sigaction = std::mem::zeroed();\n'
+                '        // libc::sigaction uses `usize` for the function pointer...\n'
+                '        sa.sa_sigaction = sig_timeout_handler as *const extern "C" fn(i32) as usize;\n'
+                '        sa.sa_mask = sa_mask.assume_init();\n'
+                '        sa.sa_flags = 0;\n'
+                '        sa.sa_restorer = None;'
+            )
+            if sigaction_literal in tm:
+                tm = tm.replace(sigaction_literal, sigaction_zeroed, 1)
+                timer_changed = True
+            if timer_changed:
                 timer.write_text(tm)
                 patched_sys = True
             locker = proxmox_sys / "process_locker.rs"

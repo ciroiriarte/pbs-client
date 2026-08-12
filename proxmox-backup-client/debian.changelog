@@ -1,5 +1,15 @@
 proxmox-backup-client (4.2.0-0) unstable; urgency=medium
 
+  * Fix s390x build: construct libc::sigaction from a zeroed value instead
+    of struct-literal syntax. On s390x libc::sigaction carries a private
+    __glibc_reserved0 field, so the upstream struct literal in proxmox-sys
+    timer.rs failed to compile. The zeroed construction assigns only public
+    fields and is behaviour-identical on every architecture.
+
+ -- Ciro Iriarte <ciro.iriarte+software@gmail.com>  Wed, 12 Aug 2026 00:00:00 +0000
+
+proxmox-backup-client (4.2.0-0) unstable; urgency=medium
+
   * Add s390x architecture support. s390x is big-endian; the pxar and
     datastore on-disk/on-wire formats are little-endian by design, so
     backups are cross-architecture compatible. Add the s390x pbs-buildcfg

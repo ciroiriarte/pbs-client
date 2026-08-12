@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Wed Aug 12 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Fix s390x build: construct libc::sigaction from a zeroed value instead
+  of struct-literal syntax. On s390x libc::sigaction carries a private
+  __glibc_reserved0 field, so the upstream struct literal in
+  proxmox-sys timer.rs failed to compile ("cannot construct sigaction
+  with struct literal syntax due to private fields"). The zeroed
+  construction assigns only public fields and is behaviour-identical on
+  every architecture.
+
+-------------------------------------------------------------------
 Tue Aug 11 12:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Add s390x architecture support (Debian s390x; RPM s390x). s390x is
