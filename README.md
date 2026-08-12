@@ -298,3 +298,14 @@ tools/bump.py --checkout <checkout> --commit
   the `pbs-buildcfg` multiarch mapping. See the armv7l limitations above for the
   runtime consequences (>2 GiB single-file restore and post-2038 timestamps abort
   on 32-bit).
+- **s390x source patches.** s390x is 64-bit, so none of the ARM32 libc-width
+  patches apply. It needs the `pbs-buildcfg` multiarch mapping (`s390x` →
+  `s390x-linux-gnu`) plus one s390x-specific fix in `proxmox-sys`: on this arch
+  `libc::sigaction` carries a private `__glibc_reserved0` field (between
+  `sa_sigaction` and `sa_flags`), so upstream's struct-literal construction in
+  `linux/timer.rs` cannot name every field and fails to compile there (only
+  s390x). `build_source.py` rewrites it to build the struct from
+  `std::mem::zeroed()` and assign the public fields — behaviour-identical on
+  every arch (it matches the `mem::zeroed()` idiom the same file already uses for
+  `sigevent` and the timer handle) and touches only timeout signal-handler setup,
+  nothing in the backup data path.
