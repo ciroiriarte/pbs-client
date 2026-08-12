@@ -43,16 +43,42 @@ Rust host toolchains are available.
 | openSUSE Slowroll | ✅ | — | — | — | no secondary-arch base on OBS |
 | openSUSE Leap 16.0 | ✅ | ✅ | — | ✅ | no armv7l base |
 | openSUSE Leap 15.6 | ✅ | ✅ | — | ✅ | no armv7l base |
-| Rocky Linux 9 | ✅ | — | — | — | EL secondary arches not enabled in this project |
-| Rocky Linux 10 | ✅ | — | — | — | EL secondary arches not enabled in this project |
-| Ubuntu 24.04 | ✅ | ✅ | ✅ | ✅ | |
-| Ubuntu 26.04 | ✅ | ✅ | ✅ | ✅ | |
+| Rocky Linux 9 | ✅ | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
+| Rocky Linux 10 | ✅ | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
+| Ubuntu 24.04 | ✅ | ✅ | ✅ † | ✅ | armv7l waits on OBS worker availability |
+| Ubuntu 26.04 | ✅ | ✅ | ✅ † | ✅ | armv7l waits on OBS worker availability |
 | Debian 11 (Bullseye) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
 | Debian 12 (Bookworm) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
 | Debian 13 (Trixie) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
 
 Debian remains **non-amd64** by design: Proxmox's official Debian client repo
 already covers x86_64, so this project fills the arm64/armhf/ppc64el gaps.
+
+† Ubuntu armv7l builds are enabled but currently queue on OBS worker
+availability (armhf workers are frequently down); they build once a compliant
+worker is free.
+
+### armv7l (32-bit ARM) limitations
+
+armv7l is a **32-bit** target: the kernel/libc `off_t` (file offsets) and
+`time_t` (timestamps) are **signed** 32-bit (`i32`). The client keeps its
+internal backup model wide (64-bit sizes, offsets, inodes, timestamps) and only
+converts at the libc boundary, choosing **fail-loud over silent truncation** to
+protect backup integrity. The practical consequences on armv7l only:
+
+- **Restoring a single file ≥ 2 GiB aborts with an error** instead of truncating
+  it. The ceiling is 2 GiB, not 4 GiB, because `off_t` is *signed* 32-bit — its
+  maximum is 2³¹−1 (≈ 2.0 GiB), so `ftruncate` cannot express a size at or above
+  2³¹ bytes. Backup *creation* streams and is not subject to this per-file
+  ceiling in the same way, but file-level restore of an oversized member will
+  fail loudly.
+- **Timestamps beyond the 32-bit `time_t` range (year 2038) fail loudly** rather
+  than wrapping when written back to the filesystem during restore.
+
+These limits are inherent to the 32-bit platform ABI, not to this packaging. If
+you back up hosts with files >2 GiB, restore on a 64-bit client (aarch64/x86_64)
+pointed at the same datastore. aarch64, ppc64le, and x86_64 are full 64-bit and
+have none of these limits.
 
 ## Install
 
@@ -224,4 +250,20 @@ tools/bump.py --checkout <checkout> --commit
   repo and Rust publishes native host tools. ARM32 uses Rust's
   `armv7-unknown-linux-gnueabihf` toolchain (Debian/Ubuntu package arch `armhf`,
   OBS arch `armv7l`); PowerPC uses `powerpc64le-unknown-linux-gnu` (Debian/Ubuntu
-  package arch `ppc64el`, OBS/RPM arch `ppc64le`).
+  package arch `ppc64el`, OBS/RPM arch `ppc64le`). Rocky/EL is x86_64-only: OBS
+  lists aarch64 as a scheduler arch for the RockyLinux repos but only partially
+  mirrors the aarch64 base (no `rpm`/base package set), so the build root can't
+  form.
+- **ARM32 (32-bit) source patches.** Upstream assumes 64-bit Linux libc field
+  widths in several places; on `armv7l`/`armhf`, `off_t`, `time_t`, `st_ino`,
+  `st_mtime`, `f_type`, etc. are narrower. `build_source.py` patches
+  `proxmox-time`, `proxmox-sys`, `proxmox-shared-memory`, `proxmox-fuse`,
+  `pbs-config`, `pbs-datastore`, `pbs-pxar-fuse`, `pbs-fuse-loop`, and
+  `pbs-client/src/pxar/{create,extract,metadata}.rs`. The policy keeps the
+  internal backup model **wide** and converts only at the libc boundary: **widen
+  narrow libc reads**, **checked-convert writes into libc `off_t`/`time_t`** so
+  oversized files/timestamps **fail loudly instead of truncating**, and compile
+  the libfuse C glue with `-D_FILE_OFFSET_BITS=64`. ppc64le (64-bit LE) needs only
+  the `pbs-buildcfg` multiarch mapping. See the armv7l limitations above for the
+  runtime consequences (>2 GiB single-file restore and post-2038 timestamps abort
+  on 32-bit).
