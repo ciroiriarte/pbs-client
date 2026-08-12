@@ -1,4 +1,13 @@
 -------------------------------------------------------------------
+Tue Aug 11 12:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Add s390x architecture support (Debian s390x; RPM s390x). s390x is
+  big-endian; the on-disk/on-wire pxar and datastore formats are
+  little-endian by design (Endian-derive + le-value readers), so backups
+  are cross-architecture compatible. Add the s390x pbs-buildcfg multiarch
+  mapping.
+
+-------------------------------------------------------------------
 Tue Aug 11 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Add Debian package architecture support for armhf and ppc64el.

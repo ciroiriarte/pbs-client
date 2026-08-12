@@ -8,7 +8,8 @@ RUST_TRIPLE := $(strip \
   $(if $(filter arm64,$(DEB_HOST_ARCH)),aarch64-unknown-linux-gnu,\
   $(if $(filter armhf,$(DEB_HOST_ARCH)),armv7-unknown-linux-gnueabihf,\
   $(if $(filter ppc64el,$(DEB_HOST_ARCH)),powerpc64le-unknown-linux-gnu,\
-  x86_64-unknown-linux-gnu))))
+  $(if $(filter s390x,$(DEB_HOST_ARCH)),s390x-unknown-linux-gnu,\
+  x86_64-unknown-linux-gnu)))))
 PREFIX := /opt/pbs-client-rust
 DESTDIR := $(CURDIR)/debian/pbs-client-rust
 

@@ -4,7 +4,7 @@
 # the same idea as the rustup step other builds use, but offline, because OBS
 # build workers have no network).
 #
-# Output: dist/rust-<ver>-{x86_64,aarch64,powerpc64le}-unknown-linux-gnu plus armv7-unknown-linux-gnueabihf.tar.xz
+# Output: dist/rust-<ver>-{x86_64,aarch64,powerpc64le,s390x}-unknown-linux-gnu plus armv7-unknown-linux-gnueabihf.tar.xz
 # These are large (~150-200 MB each), git-ignored, and committed to the OBS
 # package inside Source0. Re-run only when RUST_VERSION changes.
 set -euo pipefail
@@ -18,7 +18,8 @@ for triple in \
   x86_64-unknown-linux-gnu \
   aarch64-unknown-linux-gnu \
   armv7-unknown-linux-gnueabihf \
-  powerpc64le-unknown-linux-gnu
+  powerpc64le-unknown-linux-gnu \
+  s390x-unknown-linux-gnu
 do
   f="rust-${RUST_VERSION}-${triple}.tar.xz"
   if [ -f "$OUT/$f" ]; then echo "have $f"; continue; fi

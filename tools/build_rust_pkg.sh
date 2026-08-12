@@ -17,7 +17,8 @@ for triple in \
   x86_64-unknown-linux-gnu \
   aarch64-unknown-linux-gnu \
   armv7-unknown-linux-gnueabihf \
-  powerpc64le-unknown-linux-gnu
+  powerpc64le-unknown-linux-gnu \
+  s390x-unknown-linux-gnu
 do
   f="rust-${RUST_VERSION}-${triple}.tar.xz"
   [ -f "$DIST/$f" ] || { echo "missing $DIST/$f — run tools/fetch_rust.sh"; exit 1; }

@@ -7,7 +7,7 @@ Standards-Version: 4.6.2
 Homepage: https://www.rust-lang.org
 
 Package: pbs-client-rust
-Architecture: amd64 arm64 armhf ppc64el
+Architecture: amd64 arm64 armhf ppc64el s390x
 Depends: ${misc:Depends}
 Description: Private prebuilt Rust toolchain for building proxmox-backup-client
  Prebuilt upstream Rust toolchain (rustc, cargo, rust-std) under

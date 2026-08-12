@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Aug 11 12:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Add the prebuilt Rust host toolchain for s390x
+  (s390x-unknown-linux-gnu) and enable pbs-client-rust builds on s390x.
+
+-------------------------------------------------------------------
 Tue Aug 11 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Add prebuilt Rust host toolchains for armv7/armhf and ppc64le.

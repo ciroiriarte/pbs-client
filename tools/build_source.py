@@ -193,18 +193,18 @@ def main() -> int:
                 print("Patched proxmox-time posix.rs: support 32-bit libc::time_t.")
 
         # Architecture compat: pbs-buildcfg only knows Debian multiarch tuples
-        # for the upstream server/client arches. Add native armhf and ppc64le
-        # mappings used by the OBS builds enabled here.
+        # for the upstream server/client arches. Add native armhf, ppc64le and
+        # s390x mappings used by the OBS builds enabled here.
         buildcfg = pbs / "pbs-buildcfg" / "build.rs"
         if buildcfg.exists():
             b = buildcfg.read_text()
             if 'Ok("arm") => "arm-linux-gnueabihf"' not in b:
                 b = b.replace(
                     '        Ok("aarch64") => "aarch64-linux-gnu",\n        Ok("riscv64") => "riscv64-linux-gnu",',
-                    '        Ok("aarch64") => "aarch64-linux-gnu",\n        Ok("arm") => "arm-linux-gnueabihf",\n        Ok("powerpc64") => "powerpc64le-linux-gnu",\n        Ok("riscv64") => "riscv64-linux-gnu",',
+                    '        Ok("aarch64") => "aarch64-linux-gnu",\n        Ok("arm") => "arm-linux-gnueabihf",\n        Ok("powerpc64") => "powerpc64le-linux-gnu",\n        Ok("s390x") => "s390x-linux-gnu",\n        Ok("riscv64") => "riscv64-linux-gnu",',
                 )
                 buildcfg.write_text(b)
-                print("Patched pbs-buildcfg build.rs: add armhf/ppc64le multiarch mappings.")
+                print("Patched pbs-buildcfg build.rs: add armhf/ppc64le/s390x multiarch mappings.")
 
         # Architecture compat: proxmox-sys has several Linux libc type
         # assumptions that are true on 64-bit targets but not armhf. Keep the

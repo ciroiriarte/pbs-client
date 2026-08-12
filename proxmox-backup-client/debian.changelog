@@ -1,5 +1,14 @@
 proxmox-backup-client (4.2.0-0) unstable; urgency=medium
 
+  * Add s390x architecture support. s390x is big-endian; the pxar and
+    datastore on-disk/on-wire formats are little-endian by design, so
+    backups are cross-architecture compatible. Add the s390x pbs-buildcfg
+    multiarch mapping.
+
+ -- Ciro Iriarte <ciro.iriarte+software@gmail.com>  Tue, 11 Aug 2026 12:00:00 +0000
+
+proxmox-backup-client (4.2.0-0) unstable; urgency=medium
+
   * Add binary package architecture support for armhf and ppc64el.
   * Patch bundled upstream sources for 32-bit libc::time_t, ARM32
     libc field widths including fuse-loop and pbs-client pxar

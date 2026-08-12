@@ -37,19 +37,19 @@ Ubuntu 24.04/26.04, and Debian 11/12/13 on the architectures shown below.
 Secondary architectures are enabled only where both OBS workers/base repos and
 Rust host toolchains are available.
 
-| Distro | x86_64 | aarch64 | armv7l / armhf | ppc64le / ppc64el | Notes |
-|--------|:------:|:-------:|:--------------:|:-----------------:|-------|
-| openSUSE Tumbleweed | ✅ | ✅ | ✅ | ✅ | uses the Tumbleweed standard repo for ports |
-| openSUSE Slowroll | ✅ | — | — | — | no secondary-arch base on OBS |
-| openSUSE Leap 16.0 | ✅ | ✅ | — | ✅ | no armv7l base |
-| openSUSE Leap 15.6 | ✅ | ✅ | — | ✅ | no armv7l base |
-| Rocky Linux 9 | ✅ | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
-| Rocky Linux 10 | ✅ | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
-| Ubuntu 24.04 | ✅ | ✅ | ✅ † | ✅ | armv7l waits on OBS worker availability |
-| Ubuntu 26.04 | ✅ | ✅ | ✅ † | ✅ | armv7l waits on OBS worker availability |
-| Debian 11 (Bullseye) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
-| Debian 12 (Bookworm) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
-| Debian 13 (Trixie) | — | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
+| Distro | x86_64 | aarch64 | armv7l / armhf | ppc64le / ppc64el | s390x | Notes |
+|--------|:------:|:-------:|:--------------:|:-----------------:|:-----:|-------|
+| openSUSE Tumbleweed | ✅ | ✅ | ✅ | ✅ | — | ports via Tumbleweed standard; s390x lives in a separate zSystems project (not enabled) |
+| openSUSE Slowroll | ✅ | — | — | — | — | no secondary-arch base on OBS |
+| openSUSE Leap 16.0 | ✅ | ✅ | — | ✅ | ✅ | no armv7l base |
+| openSUSE Leap 15.6 | ✅ | ✅ | — | ✅ | ✅ | no armv7l base |
+| Rocky Linux 9 | ✅ | — | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
+| Rocky Linux 10 | ✅ | — | — | — | — | OBS only partially mirrors the EL aarch64 base (no rpm/base set → build root can't form) |
+| Ubuntu 24.04 | ✅ | ✅ | ✅ † | ✅ | ✅ | armv7l waits on OBS worker availability |
+| Ubuntu 26.04 | ✅ | ✅ | ✅ † | ✅ | ✅ | armv7l waits on OBS worker availability |
+| Debian 11 (Bullseye) | — | ✅ | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
+| Debian 12 (Bookworm) | — | ✅ | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
+| Debian 13 (Trixie) | — | ✅ | ✅ | ✅ | ✅ | no overlap with upstream amd64 |
 
 Debian remains **non-amd64** by design: Proxmox's official Debian client repo
 already covers x86_64, so this project fills the arm64/armhf/ppc64el gaps.
@@ -79,6 +79,18 @@ These limits are inherent to the 32-bit platform ABI, not to this packaging. If
 you back up hosts with files >2 GiB, restore on a 64-bit client (aarch64/x86_64)
 pointed at the same datastore. aarch64, ppc64le, and x86_64 are full 64-bit and
 have none of these limits.
+
+### s390x (big-endian) note
+
+s390x is the only **big-endian** target in the matrix. This is safe for backup
+data: the on-disk/on-wire formats (pxar archives and the datastore chunk/index
+formats) are **little-endian by design** regardless of host endianness — the
+pxar codec byte-swaps through `.to_le()`/`.from_le()` and the datastore uses
+explicit little-endian readers/writers. A backup created on s390x is therefore
+byte-compatible with, and restorable on, little-endian clients (x86_64, arm64,
+ppc64le) and vice versa. No native-endian serialization exists in the format
+paths. (upstream ships an `Endian` derive precisely to keep the format
+portable.)
 
 ## Install
 
@@ -158,7 +170,7 @@ overrides upstream ships commented-out, and vendor only the third-party crates.
 The Rust toolchain no longer travels with the client bundle. It now lives in a
 separate, build-only OBS package, **`pbs-client-rust`**, which installs the
 prebuilt upstream toolchain (rustc/cargo/rust-std for x86_64, aarch64,
-armv7, and ppc64le) to
+armv7, ppc64le, and s390x) to
 `/opt/pbs-client-rust`. Its `Source0` is `pbs-client-rust-<ver>.tar.gz` (built by
 `tools/build_rust_pkg.sh`, upstream tarballs fetched by `tools/fetch_rust.sh`),
 uploaded once and shared by every distro/arch build. The package has
@@ -192,7 +204,7 @@ pbs-client-rust/               # build-only helper osc package (publish-disabled
   pbs-client-rust-rpmlintrc
   debian.rules|control|compat|changelog     # Debian recipe
   pbs-client-rust.dsc
-  pbs-client-rust-<ver>.tar.gz              # prebuilt rustc/cargo/rust-std (x86_64+aarch64+armv7+ppc64le)
+  pbs-client-rust-<ver>.tar.gz              # prebuilt rustc/cargo/rust-std (x86_64+aarch64+armv7+ppc64le+s390x)
 project/
   _meta.xml                   # distro/arch matrix   (osc meta prj -F)
   _config                     # prjconf (rust preference, deb support)
@@ -243,7 +255,8 @@ tools/bump.py --checkout <checkout> --commit
   its `RUST_VERSION` (pinned in `tools/fetch_rust.sh` / `build_rust_pkg.sh` / the
   recipes) via `/opt/pbs-client-rust`. Bump rust by changing those pins and
   re-running `fetch_rust.sh` + `build_rust_pkg.sh`, then rebuilding the
-  `pbs-client-rust` package. The ~846 MB toolchain tarball is uploaded once and
+  `pbs-client-rust` package. The ~1.1 GB toolchain tarball (five host
+  toolchains) is uploaded once and
   shared by every distro/arch build instead of being embedded per-release in the
   client bundle, so the client source stays small and end-user package/repo size
   is unaffected.
@@ -264,7 +277,11 @@ tools/bump.py --checkout <checkout> --commit
   repo and Rust publishes native host tools. ARM32 uses Rust's
   `armv7-unknown-linux-gnueabihf` toolchain (Debian/Ubuntu package arch `armhf`,
   OBS arch `armv7l`); PowerPC uses `powerpc64le-unknown-linux-gnu` (Debian/Ubuntu
-  package arch `ppc64el`, OBS/RPM arch `ppc64le`). Rocky/EL is x86_64-only: OBS
+  package arch `ppc64el`, OBS/RPM arch `ppc64le`); s390x uses
+  `s390x-unknown-linux-gnu` (package/OBS arch `s390x`, big-endian — see the s390x
+  note above), enabled on Leap 16.0/15.6, Debian 11/12/13 and Ubuntu 24.04/26.04
+  (not Tumbleweed, whose s390x port is in a separate `openSUSE:Factory:zSystems`
+  project). Rocky/EL is x86_64-only: OBS
   lists aarch64 as a scheduler arch for the RockyLinux repos but only partially
   mirrors the aarch64 base (no `rpm`/base package set), so the build root can't
   form.
