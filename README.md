@@ -82,52 +82,66 @@ have none of these limits.
 
 ## Install
 
-Replace `<REPO>` with your distro's repository name from the table, and see the
-live index at
+Two steps: **(1)** pick your `REPO` token from the table, **(2)** paste the block
+for your package manager, editing only the `REPO=` line. Live index:
 `https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/`.
 
-| Distro | `<REPO>` |
-|--------|----------|
-| Tumbleweed | `openSUSE_Tumbleweed` |
-| Slowroll | `openSUSE_Slowroll` |
-| Leap 16.0 | `openSUSE_Leap_16.0` |
-| Leap 15.6 | `openSUSE_Leap_15.6` |
-| Rocky 9 | `RockyLinux_9` |
-| Rocky 10 | `RockyLinux_10` |
-| Ubuntu 24.04 | `Ubuntu_24.04` |
-| Ubuntu 26.04 | `Ubuntu_26.04` |
-| Debian 11 (arm64/armhf/ppc64el) | `Debian_11` |
-| Debian 12 (arm64/armhf/ppc64el) | `Debian_12` |
-| Debian 13 (arm64/armhf/ppc64el) | `Debian_13` |
+| Distro | `REPO` token | Arches |
+|--------|--------------|--------|
+| openSUSE Tumbleweed | `openSUSE_Tumbleweed` | x86_64 |
+| openSUSE Slowroll | `openSUSE_Slowroll` | x86_64 |
+| openSUSE Leap 16.0 | `openSUSE_Leap_16.0` | x86_64 |
+| openSUSE Leap 15.6 | `openSUSE_Leap_15.6` | x86_64 |
+| Rocky / EL 9 | `RockyLinux_9` | x86_64 |
+| Rocky / EL 10 | `RockyLinux_10` | x86_64 |
+| Ubuntu 24.04 | `Ubuntu_24.04` | x86_64 |
+| Ubuntu 26.04 | `Ubuntu_26.04` | x86_64 |
+| Debian 11 / 12 / 13 | `Debian_11` / `Debian_12` / `Debian_13` | **arm64 / armhf / ppc64el only** |
 
 ### openSUSE (zypper)
 
 ```sh
-BASE=https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/<REPO>
-sudo zypper addrepo -f -G "$BASE/home:ciriarte:pbs-client.repo"
+REPO=openSUSE_Tumbleweed    # ← set from the table
+BASE="https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/$REPO"
+sudo zypper addrepo -f "$BASE/home:ciriarte:pbs-client.repo"
 sudo zypper --gpg-auto-import-keys refresh
 sudo zypper install proxmox-backup-client proxmox-backup-file-restore
 ```
 
-### Rocky Linux (dnf)
+### Rocky / RHEL (dnf)
 
 ```sh
-BASE=https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/<REPO>
+REPO=RockyLinux_9    # ← set from the table
+BASE="https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/$REPO"
 sudo dnf install -y dnf-plugins-core
 sudo dnf config-manager --add-repo "$BASE/home:ciriarte:pbs-client.repo"
 sudo dnf install -y proxmox-backup-client proxmox-backup-file-restore
 ```
 
-### Ubuntu (apt)
+### Ubuntu & Debian (apt)
 
 ```sh
-BASE=https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/<REPO>
+REPO=Ubuntu_24.04    # ← set from the table (Debian: Debian_12 etc. — arm64/armhf/ppc64el only)
+BASE="https://download.opensuse.org/repositories/home:/ciriarte:/pbs-client/$REPO"
 sudo install -d /etc/apt/keyrings
 curl -fsSL "$BASE/Release.key" | sudo gpg --dearmor -o /etc/apt/keyrings/pbs-client.gpg
-echo "deb [signed-by=/etc/apt/keyrings/pbs-client.gpg] $BASE/ ./" \
-  | sudo tee /etc/apt/sources.list.d/pbs-client.list
+sudo tee /etc/apt/sources.list.d/pbs-client.sources >/dev/null <<EOF
+Types: deb
+URIs: $BASE/
+Suites: ./
+Signed-By: /etc/apt/keyrings/pbs-client.gpg
+EOF
 sudo apt-get update
 sudo apt-get install -y proxmox-backup-client proxmox-backup-file-restore
+```
+
+### Verify the signing key (optional)
+
+Before trusting the repo, confirm the OBS project key fingerprint:
+
+```sh
+curl -fsSL "$BASE/Release.key" | gpg --show-keys --with-fingerprint
+# Expect: D83E E0B5 6E28 1A42  2FB9 D4F4 F116 2661 1FCB 545E
 ```
 
 ## How the build works (important)
