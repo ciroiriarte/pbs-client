@@ -48,6 +48,17 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>s390x</arch>
   </repository>
 
+  <!-- SLES 15 SP7 (current SLE 15 service pack). :Update chains :GA, so builds
+       see maintenance updates; all modules (incl. Development Tools for
+       clang/fuse3-devel) are in its standard repo. Same base as Leap 15.6. -->
+  <repository name="SLE_15_SP7">
+    <path project="SUSE:SLE-15-SP7:Update" repository="standard"/>
+    <arch>x86_64</arch>
+    <arch>aarch64</arch>
+    <arch>ppc64le</arch>
+    <arch>s390x</arch>
+  </repository>
+
   <!-- Leap 15.6 now builds: base rust (1.77) no longer matters — the bundled
        toolchain is used. Needs only base gcc/clang/fuse3-devel. -->
   <repository name="openSUSE_Leap_15.6">
