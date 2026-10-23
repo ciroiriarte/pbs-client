@@ -213,7 +213,7 @@ tools/
   build_source.py             # assemble the offline client bundle (clone+patch+vendor+tar)
   build_rust_pkg.sh           # build the pbs-client-rust source tarball
   fetch_rust.sh                # download the upstream rust toolchain tarballs
-  bump.py                     # upstream version tracker (systemd timer / CI)
+  bump.py                     # upstream version tracker (run daily by CI)
 tests/run-matrix.sh, lib.sh   # VM provisioning + backup/restore verification
 ```
 
@@ -234,9 +234,25 @@ cp ../../dist/proxmox-backup-client-4.2.0.tar.xz .
 cp -a <repo>/proxmox-backup-client/* .
 osc addremove && osc commit -m "Initial import (v4.2.0)"
 
-# Later: automatic bumps (assembles a fresh bundle, updates changelogs, commits)
+# Manual bump (assembles a fresh bundle, updates changelogs, commits)
 tools/bump.py --checkout <checkout> --commit
 ```
+
+### Automatic upstream bumps
+
+`.github/workflows/upstream-bump.yml` runs daily (and on demand via *Run
+workflow*). It checks the newest `v*` tag on git.proxmox.com; if it is newer
+than the packaged version it runs `tools/bump.py` (assemble bundle → bump
+recipe/changelogs → `osc commit`), and OBS rebuilds every target. The job then
+pushes the updated recipe and `tools/sources.json` pins back to `main`, so the
+repo stays the source of truth. OBS cannot do this itself: it has no way to
+watch git.proxmox.com, and the multi-repo bundle assembly can't run as an OBS
+source service.
+
+Setup (Settings → Secrets and variables → Actions): variable `OBS_USER`,
+secret `OBS_PASSWORD`. If the sibling-commit guardrail trips on a new release,
+the run fails (GitHub emails you); pin the commits in `tools/sources.json` and
+re-run.
 
 ## Notes / known risks
 

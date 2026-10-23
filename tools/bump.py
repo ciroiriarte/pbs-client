@@ -105,8 +105,9 @@ def main() -> int:
     # Assemble the offline bundle (auto-resolves + verifies sibling commits).
     dist = REPO / "dist"
     print(f"assembling bundle for {new} ...")
-    run([sys.executable, str(HERE / "build_source.py"), "--version", new, "--auto",
-         "--out", str(dist)])
+    # Not captured: let clone/vendor progress and guardrail errors reach the CI log.
+    subprocess.run([sys.executable, str(HERE / "build_source.py"), "--version", new,
+                    "--auto", "--out", str(dist)], check=True)
     tarball = dist / f"proxmox-backup-client-{new}.tar.xz"
     if not tarball.exists():
         print("error: bundle not produced", file=sys.stderr)

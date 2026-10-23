@@ -1,0 +1,82 @@
+# Track upstream proxmox-backup releases and publish them to OBS.
+#
+# OBS cannot watch git.proxmox.com, and the bundle needs multi-repo assembly
+# (no OBS source service can do it), so the bump runs here: tools/bump.py
+# detects a newer v* tag, assembles the offline bundle, commits it to
+# home:ciriarte:pbs-client, then this job pushes the updated recipe +
+# tools/sources.json pins back to the repo so the next run sees the new version.
+#
+# Required settings (repo -> Settings -> Secrets and variables -> Actions):
+#   variable OBS_USER      OBS login (ciriarte)
+#   secret   OBS_PASSWORD  OBS password
+# A failed run (e.g. build_source.py's sibling-commit guardrail) emails the
+# repo owner; fix the pins in tools/sources.json and re-run manually.
+name: upstream bump
+
+on:
+  schedule:
+    - cron: "17 5 * * *"   # daily, 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: upstream-bump
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check upstream
+        id: check
+        run: |
+          out=$(python3 tools/bump.py --dry-run)
+          echo "$out"
+          if grep -q '^would bump' <<<"$out"; then echo "bump=1" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Install tooling
+        if: steps.check.outputs.bump == '1'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends osc xz-utils zstd
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+
+      - name: Configure osc
+        if: steps.check.outputs.bump == '1'
+        env:
+          OBS_USER: ${{ vars.OBS_USER }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+        run: |
+          mkdir -p ~/.config/osc
+          umask 077
+          cat > ~/.config/osc/oscrc <<EOF
+          [general]
+          apiurl = https://api.opensuse.org
+
+          [https://api.opensuse.org]
+          user = ${OBS_USER}
+          pass = ${OBS_PASSWORD}
+          credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
+          EOF
+
+      - name: Bump and commit to OBS
+        if: steps.check.outputs.bump == '1'
+        run: |
+          osc co -o "$RUNNER_TEMP/co" home:ciriarte:pbs-client proxmox-backup-client
+          python3 tools/bump.py --checkout "$RUNNER_TEMP/co" --commit
+
+      - name: Push recipe + pins back to the repo
+        if: steps.check.outputs.bump == '1'
+        run: |
+          ver=$(sed -n 's/^Version:[[:space:]]*//p' proxmox-backup-client/proxmox-backup-client.spec)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add proxmox-backup-client tools/sources.json
+          git commit -m "Update to upstream v${ver}"
+          git push
