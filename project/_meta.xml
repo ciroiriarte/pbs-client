@@ -35,6 +35,19 @@ https://github.com/ciroiriarte/pbs-client</description>
     <arch>s390x</arch>
   </repository>
 
+  <!-- ===================== SUSE Linux Enterprise ===================== -->
+  <!-- SLES 16.0 = SUSE:SLFO:1.2 (the same base SUSE builds the SLES 16.0 product
+       from; openSUSE:Backports:SLE-16.0 also sits on it). Not listed under
+       /distributions, but fully mirrored on all four 64-bit arches. No armv7l
+       (only the SLES product "ports" repo has it, without a base set). -->
+  <repository name="SLE_16.0">
+    <path project="SUSE:SLFO:1.2" repository="standard"/>
+    <arch>x86_64</arch>
+    <arch>aarch64</arch>
+    <arch>ppc64le</arch>
+    <arch>s390x</arch>
+  </repository>
+
   <!-- Leap 15.6 now builds: base rust (1.77) no longer matters — the bundled
        toolchain is used. Needs only base gcc/clang/fuse3-devel. -->
   <repository name="openSUSE_Leap_15.6">
