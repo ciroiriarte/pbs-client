@@ -4,18 +4,17 @@
 Detects the newest upstream `v*` tag on the canonical git.proxmox.com repo and,
 if it is newer than the version currently packaged, assembles a fresh offline
 source bundle (tools/build_source.py --auto: clone + date-match sibling commits +
-[patch.crates-io] + vendor), updates the recipe version/changelogs, copies the
-bundle into the osc checkout, and commits.
+[patch.crates-io] + vendor) and updates the recipe version/changelogs.
 
 Because the client cannot vendor from crates.io alone (Proxmox's own crates are
-unpublished at the pinned versions), there is no OBS source service — the bundle
-is produced here and committed as Source0. See tools/build_source.py.
+unpublished at the pinned versions), OBS cannot build the bundle itself. The
+upstream-bump workflow publishes it as the v<ver> GitHub release asset (the
+spec's Source0 URL), pushes the recipe, and triggers the package's _service.
 
-Run from an osc checkout of the package (or pass --checkout). Requires: git,
-cargo, tar, zstd, osc. Stdlib only.
+Requires: git, cargo, tar, zstd. Stdlib only.
 
 Usage:
-    tools/bump.py [--checkout DIR] [--dry-run] [--commit]
+    tools/bump.py [--dry-run]
 
 Exit codes: 0 = up to date or bump prepared; 2 = guardrail tripped; 1 = error.
 """
@@ -86,9 +85,7 @@ def rewrite_recipe(new: str) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--checkout", help="osc checkout dir of the package (to copy bundle + commit)")
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--commit", action="store_true")
     args = ap.parse_args()
 
     latest = latest_upstream_tag()
@@ -115,25 +112,6 @@ def main() -> int:
 
     rewrite_recipe(new)
     print(f"bumped {cur} -> {new}; bundle at {tarball}")
-
-    if not args.checkout:
-        print("no --checkout given; recipe + bundle updated locally. "
-              "Copy the bundle + recipe into your osc checkout and commit.")
-        return 0
-
-    co = Path(args.checkout)
-    old = list(co.glob("proxmox-backup-client-*.tar.xz"))
-    for f in old:
-        run(["osc", "rm", "--force", f.name], cwd=co)
-    run(["cp", str(tarball), str(co)])
-    for f in PKGDIR.glob("*"):
-        run(["cp", str(f), str(co)])
-    run(["osc", "addremove"], cwd=co)
-    if args.commit:
-        run(["osc", "commit", "-m", f"Update to upstream v{new}"], cwd=co)
-        print("committed to OBS")
-    else:
-        print("staged in checkout; re-run with --commit to publish")
     return 0
 
 

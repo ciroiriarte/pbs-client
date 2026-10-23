@@ -20,7 +20,7 @@ Release:        0
 Summary:        Proxmox Backup client (proxmox-backup-client, pxar)
 License:        AGPL-3.0-or-later
 URL:            https://pbs.proxmox.com
-Source0:        proxmox-backup-client-%{version}.tar.xz
+Source0:        https://github.com/ciroiriarte/pbs-client/releases/download/v%{version}/proxmox-backup-client-%{version}.tar.xz
 
 # Rust comes from the sibling pbs-client-rust package (prebuilt toolchain under
 # /opt/pbs-client-rust), so the build is independent of the distro's rust version.

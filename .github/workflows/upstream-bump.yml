@@ -2,13 +2,15 @@
 #
 # OBS cannot watch git.proxmox.com, and the bundle needs multi-repo assembly
 # (no OBS source service can do it), so the bump runs here: tools/bump.py
-# detects a newer v* tag, assembles the offline bundle, commits it to
-# home:ciriarte:pbs-client, then this job pushes the updated recipe +
-# tools/sources.json pins back to the repo so the next run sees the new version.
+# detects a newer v* tag, assembles the offline bundle and bumps the recipe.
+# This job then publishes the bundle as the v<ver> release asset (the spec's
+# Source0 URL), pushes the recipe + tools/sources.json pins to main, and fires
+# the package's runservice token. OBS re-runs proxmox-backup-client/_service
+# (obs_scm pulls the recipe, download_files fetches the bundle) and rebuilds.
 #
-# Required settings (repo -> Settings -> Secrets and variables -> Actions):
-#   variable OBS_USER      OBS login (ciriarte)
-#   secret   OBS_PASSWORD  OBS password
+# Required setting (repo -> Settings -> Secrets and variables -> Actions):
+#   secret OBS_SERVICE_TOKEN  runservice token bound to
+#                             home:ciriarte:pbs-client/proxmox-backup-client
 # A failed run (e.g. build_source.py's sibling-commit guardrail) emails the
 # repo owner; fix the pins in tools/sources.json and re-run manually.
 name: upstream bump
@@ -43,40 +45,45 @@ jobs:
         if: steps.check.outputs.bump == '1'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends osc xz-utils zstd
+          sudo apt-get install -y --no-install-recommends xz-utils zstd
           rustup toolchain install stable --profile minimal
           rustup default stable
 
-      - name: Configure osc
+      - name: Assemble bundle and bump recipe
+        id: bump
+        if: steps.check.outputs.bump == '1'
+        run: |
+          python3 tools/bump.py
+          ver=$(sed -n 's/^Version:[[:space:]]*//p' proxmox-backup-client/proxmox-backup-client.spec)
+          echo "ver=${ver}" >> "$GITHUB_OUTPUT"
+
+      # Release before pushing: once main has the new spec, any service run
+      # (ours or a manual one) must find the Source0 asset.
+      - name: Publish bundle as release asset
         if: steps.check.outputs.bump == '1'
         env:
-          OBS_USER: ${{ vars.OBS_USER }}
-          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
+          VER: ${{ steps.bump.outputs.ver }}
         run: |
-          mkdir -p ~/.config/osc
-          umask 077
-          cat > ~/.config/osc/oscrc <<EOF
-          [general]
-          apiurl = https://api.opensuse.org
-
-          [https://api.opensuse.org]
-          user = ${OBS_USER}
-          pass = ${OBS_PASSWORD}
-          credentials_mgr_class = osc.credentials.PlaintextConfigFileCredentialsManager
-          EOF
-
-      - name: Bump and commit to OBS
-        if: steps.check.outputs.bump == '1'
-        run: |
-          osc co -o "$RUNNER_TEMP/co" home:ciriarte:pbs-client proxmox-backup-client
-          python3 tools/bump.py --checkout "$RUNNER_TEMP/co" --commit
+          gh release create "v${VER}" "dist/proxmox-backup-client-${VER}.tar.xz" \
+            --target "$GITHUB_SHA" --title "proxmox-backup-client ${VER}" \
+            --notes "Offline source bundle for upstream proxmox-backup v${VER}."
 
       - name: Push recipe + pins back to the repo
         if: steps.check.outputs.bump == '1'
+        env:
+          VER: ${{ steps.bump.outputs.ver }}
         run: |
-          ver=$(sed -n 's/^Version:[[:space:]]*//p' proxmox-backup-client/proxmox-backup-client.spec)
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add proxmox-backup-client tools/sources.json
-          git commit -m "Update to upstream v${ver}"
+          git commit -m "Update to upstream v${VER}"
           git push
+
+      - name: Trigger OBS source service
+        if: steps.check.outputs.bump == '1'
+        env:
+          OBS_SERVICE_TOKEN: ${{ secrets.OBS_SERVICE_TOKEN }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Token ${OBS_SERVICE_TOKEN}" \
+            https://api.opensuse.org/trigger/runservice

@@ -1,0 +1,22 @@
+<!-- OBS source service for home:ciriarte:pbs-client/proxmox-backup-client.
+     The recipe lives in GitHub (this directory); the offline source bundle is
+     a GitHub release asset (Source0 URL in the spec). The upstream-bump
+     workflow publishes both, then fires a runservice token to re-run this.
+     _constraints stays a plain committed file in OBS (the scheduler reads it). -->
+<services>
+  <service name="obs_scm">
+    <param name="scm">git</param>
+    <param name="url">https://github.com/ciroiriarte/pbs-client.git</param>
+    <param name="revision">main</param>
+    <param name="extract">proxmox-backup-client/proxmox-backup-client.spec</param>
+    <param name="extract">proxmox-backup-client/proxmox-backup-client.changes</param>
+    <param name="extract">proxmox-backup-client/proxmox-backup-client.dsc</param>
+    <param name="extract">proxmox-backup-client/debian.changelog</param>
+    <param name="extract">proxmox-backup-client/debian.compat</param>
+    <param name="extract">proxmox-backup-client/debian.control</param>
+    <param name="extract">proxmox-backup-client/debian.rules</param>
+    <param name="extract">proxmox-backup-client/debian.proxmox-backup-client.install</param>
+    <param name="extract">proxmox-backup-client/debian.proxmox-backup-file-restore.install</param>
+  </service>
+  <service name="download_files"/>
+</services>

@@ -194,7 +194,8 @@ longer embedded, the client source bundle itself stays slim (~53 MB).
 
 ```
 proxmox-backup-client/        # the osc package (one source → RPM + DEB)
-  proxmox-backup-client.spec  # RPM recipe (openSUSE + Rocky); Source0 = the bundle
+  _service                    # OBS: pull recipe from GitHub + bundle from the release
+  proxmox-backup-client.spec  # RPM recipe (openSUSE + Rocky); Source0 = the bundle URL
   proxmox-backup-client.changes
   debian.control|rules|compat|changelog|*.install   # Ubuntu recipe
   _constraints                # extra disk/mem for the vendored build
@@ -227,15 +228,18 @@ osc meta prjconf home:ciriarte:pbs-client -F project/_config
 # Build the source bundle for the current version (clone + patch + vendor + tar)
 tools/build_source.py --version 4.2.0        # -> dist/proxmox-backup-client-4.2.0.tar.xz
 
-# Package: check out, add the bundle + recipe, commit
+# Publish the bundle where the spec's Source0 points
+gh release create v4.2.0 dist/proxmox-backup-client-4.2.0.tar.xz
+
+# Package: the OBS package holds only _service + _constraints; the service
+# pulls the recipe from this repo (main) and the bundle from the release
 osc co home:ciriarte:pbs-client proxmox-backup-client
 cd <checkout>
-cp ../../dist/proxmox-backup-client-4.2.0.tar.xz .
-cp -a <repo>/proxmox-backup-client/* .
-osc addremove && osc commit -m "Initial import (v4.2.0)"
+cp <repo>/proxmox-backup-client/{_service,_constraints} .
+osc addremove && osc commit -m "Source the recipe and bundle from GitHub"
 
-# Manual bump (assembles a fresh bundle, updates changelogs, commits)
-tools/bump.py --checkout <checkout> --commit
+# Re-run the service after pushing recipe changes to main
+osc service remoterun home:ciriarte:pbs-client proxmox-backup-client
 ```
 
 ### Automatic upstream bumps
@@ -243,16 +247,23 @@ tools/bump.py --checkout <checkout> --commit
 `.github/workflows/upstream-bump.yml` runs daily (and on demand via *Run
 workflow*). It checks the newest `v*` tag on git.proxmox.com; if it is newer
 than the packaged version it runs `tools/bump.py` (assemble bundle → bump
-recipe/changelogs → `osc commit`), and OBS rebuilds every target. The job then
-pushes the updated recipe and `tools/sources.json` pins back to `main`, so the
-repo stays the source of truth. OBS cannot do this itself: it has no way to
-watch git.proxmox.com, and the multi-repo bundle assembly can't run as an OBS
-source service.
+recipe/changelogs), publishes the bundle as the `v<ver>` release asset, pushes
+the recipe and `tools/sources.json` pins to `main`, and fires a `runservice`
+token. OBS re-runs `_service` (recipe via `obs_scm`, bundle via
+`download_files`) and rebuilds every target. OBS cannot do the detection or
+assembly itself: it has no way to watch git.proxmox.com, and the multi-repo
+bundle assembly can't run as an OBS source service.
 
-Setup (Settings → Secrets and variables → Actions): variable `OBS_USER`,
-secret `OBS_PASSWORD`. If the sibling-commit guardrail trips on a new release,
-the run fails (GitHub emails you); pin the commits in `tools/sources.json` and
-re-run.
+Setup: create the token bound to the package and store it as the
+`OBS_SERVICE_TOKEN` Actions secret (no OBS password lives in GitHub):
+
+```sh
+osc token --create --operation runservice home:ciriarte:pbs-client proxmox-backup-client
+gh secret set OBS_SERVICE_TOKEN
+```
+
+If the sibling-commit guardrail trips on a new release, the run fails (GitHub
+emails you); pin the commits in `tools/sources.json` and re-run.
 
 ## Notes / known risks
 
