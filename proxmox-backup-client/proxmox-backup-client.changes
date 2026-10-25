@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Sun Oct 25 14:29:05 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
+
+- Update to upstream v4.2.8.
+
+-------------------------------------------------------------------
 Wed Aug 12 00:00:00 UTC 2026 - Ciro Iriarte <ciro.iriarte+software@gmail.com>
 
 - Fix s390x build: construct libc::sigaction from a zeroed value instead

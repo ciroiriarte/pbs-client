@@ -15,7 +15,7 @@
 #
 
 Name:           proxmox-backup-client
-Version:        4.2.0
+Version:        4.2.8
 Release:        0
 Summary:        Proxmox Backup client (proxmox-backup-client, pxar)
 License:        AGPL-3.0-or-later

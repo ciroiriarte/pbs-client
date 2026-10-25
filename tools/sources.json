@@ -14,6 +14,13 @@
       "pathpatterns": "5323cbe49ae5d592eb8a3fa2e215550e83dd7fba",
       "pxar": "091a8a382d0d6fc71025351fb35c51b1f3b0074d",
       "proxmox-fuse": "ac99ac97f7c2eb7ab9ee6ec3b41034e68b1eca7d"
+    },
+    "4.2.8": {
+      "proxmox-backup": "v4.2.8",
+      "proxmox": "3e32610197b07e4e291f6c79563ae0081bba287d",
+      "pathpatterns": "5323cbe49ae5d592eb8a3fa2e215550e83dd7fba",
+      "pxar": "091a8a382d0d6fc71025351fb35c51b1f3b0074d",
+      "proxmox-fuse": "ac99ac97f7c2eb7ab9ee6ec3b41034e68b1eca7d"
     }
   }
 }
