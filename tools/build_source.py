@@ -111,6 +111,19 @@ def enable_patches(pbs: Path) -> int:
         if re.match(r'\s*#\s*\S+\s*=\s*\{\s*path\s*=\s*"\.\./', l):
             lines[i] = re.sub(r'^(\s*)#\s*', r"\1", l)
             n += 1
+    # Upstream sometimes adds a workspace dependency without a matching
+    # (commented) patch line, e.g. proxmox-syslog-api in v4.2.8. If such a
+    # crate lives in the proxmox sibling repo, add the path override ourselves.
+    text = "\n".join(lines)
+    deps = re.search(r"^\[workspace\.dependencies\]\n(.*?)^\[", text, re.M | re.S)
+    patched = set(re.findall(r'^\s*([\w-]+)\s*=\s*\{\s*path\s*=', text, re.M))
+    idx = next(i for i, l in enumerate(lines) if l.strip() == "[patch.crates-io]")
+    for name in re.findall(r"^([\w-]+)\s*=", deps.group(1), re.M) if deps else []:
+        if name not in patched and (pbs.parent / "proxmox" / name / "Cargo.toml").exists():
+            idx += 1
+            lines.insert(idx, f'{name} = {{ path = "../proxmox/{name}" }}')
+            print(f"  added missing patch override: {name}")
+            n += 1
     ct.write_text("\n".join(lines) + "\n")
     return n
 
